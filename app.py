@@ -3,23 +3,21 @@ import json
 from google.oauth2.service_account import Credentials
 import gspread
 
-app = Flask(__name__)
-
-
-# =========================
-# 🔐 GOOGLE SHEETS SETUP
-# =========================
 scope = [
     "https://www.googleapis.com/auth/spreadsheets",
     "https://www.googleapis.com/auth/drive"
 ]
 
+<<<<<<< HEAD
 # ✅ Read from Render Environment
 creds_dict = json.loads(os.environ["GOOGLE_CREDENTIALS"])
+=======
+creds_dict = json.loads(os.environ["GOOGLE_CREDENTIALS"])
+creds = Credentials.from_service_account_info(creds_dict, scopes=scope)
+>>>>>>> 0869018 (final env fix)
 
 creds = Credentials.from_service_account_info(creds_dict, scopes=scope)
 
-# Open your sheet
 sheet = client.open("Nifty_OI_Data").worksheet("Dashboard")
 
 
