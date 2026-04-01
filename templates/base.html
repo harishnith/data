@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Algo Terminal</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<script>
+    // Auto refresh every 2 minutes
+    setInterval(function () {
+        window.location.reload();
+    }, 120000);
+
+    // Live clock
+    function updateClock() {
+        const now = new Date();
+        document.getElementById("clock").innerText =
+            now.toLocaleString();
+    }
+
+    setInterval(updateClock, 1000);
+    updateClock();
+</script>
+<script>
+let previousValues = {};
+
+function updateDMA() {
+    document.querySelectorAll(".dma-value").forEach((el, index) => {
+
+        let current = parseFloat(el.innerText);
+
+        if (previousValues[index] !== undefined) {
+
+            if (current > previousValues[index]) {
+                el.classList.remove("blink-red");
+                el.classList.add("blink-green");
+            }
+            else if (current < previousValues[index]) {
+                el.classList.remove("blink-green");
+                el.classList.add("blink-red");
+            }
+        }
+
+        previousValues[index] = current;
+    });
+}
+
+// check every 2 sec
+setInterval(updateDMA, 2000);
+</script>
+<body>
+
+<div class="container">
+
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="logo">
+    <img src="/static/logo.png" alt="Logo">
+</div>
+        <a href="/">Home</a>
+		<a href="/indices">Indices</a>
+        <a href="/dma">DMA</a>
+        <a href="/oi">OI</a>
+        <a href="/top5">TOP 5</a>
+        <a href="/stocks">Stocks</a>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main">
+
+        <!-- Header -->
+        <div class="header">
+            <h1>Algo Terminal</h1>
+            <div id="clock"></div>
+        </div>
+
+        <!-- Page Content -->
+        <div class="content">
+            {% block content %}{% endblock %}
+        </div>
+
+    </div>
+
+</div>
+
+<script src="/static/script.js"></script>
+
+</body>
+</html>

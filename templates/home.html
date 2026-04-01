@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h2>Dashboard</h2>
+
+<div class="grid">
+
+<div class="card green">
+<h3>Trend</h3>
+<p>{{ data.trend }}</p>
+</div>
+
+<div class="card blue">
+<h3>Sentiment</h3>
+<p>{{ data.sentiment }}</p>
+</div>
+
+<div class="card yellow">
+<h3>PCR</h3>
+<p>{{ data.pcr }}</p>
+</div>
+
+<div class="card red">
+<h3>India VIX</h3>
+<p>{{ data.vix }}</p>
+</div>
+
+</div>
+
+{% endblock %}

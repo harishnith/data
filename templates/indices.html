@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="top-header">
+    <h2>Indices Dashboard</h2>
+    <div class="fetch-time">⏱ {{ data.fetch_time }}</div>
+</div>
+
+<div class="section">
+
+    <div class="index-grid">
+
+        {% for row in data.index_data %}
+
+        <div class="index-card 
+            {% if row[3]|float > 0 %}green-card{% else %}red-card{% endif %}">
+
+            <div class="index-name">{{ row[0] }}</div>
+
+            <div class="index-value">{{ row[1] }}</div>
+
+            <div class="index-change">
+                {{ row[2] }}
+            </div>
+
+            <div class="index-percent">
+                {{ row[3] }}%
+            </div>
+
+        </div>
+
+        {% endfor %}
+
+    </div>
+
+</div>
+
+{% endblock %}

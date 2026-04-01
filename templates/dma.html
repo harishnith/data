@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="top-header">
+    <h2>DMA Dashboard</h2>
+    <div class="fetch-time">⏱ {{ data.fetch_time }}</div>
+</div>
+
+<div class="grid">
+
+    <!-- NIFTY -->
+    <div class="card">
+        <h3>📈 Nifty 50</h3>
+
+        <table class="pro-table">
+            <tr>
+                <th>Level</th>
+                <th>Value</th>
+                <th>Status</th>
+            </tr>
+
+            {% for row in data.nifty %}
+            <tr>
+                <td><b>{{ row.level }}</b></td>
+
+                <td class="dma-value">{{ row.value }}</td>
+
+                <td>
+                    {% if row.level != "Live" %}
+                    <span class="badge {% if row.status == 'Above' %}green-bg{% else %}red-bg{% endif %}">
+                        {{ row.status }}
+                    </span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+
+    <!-- BANKNIFTY -->
+    <div class="card">
+        <h3>🏦 BankNifty</h3>
+
+        <table class="pro-table">
+            <tr>
+                <th>Level</th>
+                <th>Value</th>
+                <th>Status</th>
+            </tr>
+
+            {% for row in data.bank %}
+            <tr>
+                <td><b>{{ row.level }}</b></td>
+
+                <td class="dma-value">{{ row.value }}</td>
+
+                <td>
+                    {% if row.level != "Live" %}
+                    <span class="badge {% if row.status == 'Above' %}green-bg{% else %}red-bg{% endif %}">
+                        {{ row.status }}
+                    </span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+
+</div>
+
+{% endblock %}

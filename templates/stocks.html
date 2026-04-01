@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="top-header">
+    <h2>Stocks Dashboard</h2>
+    <div class="fetch-time">⏱ {{ data.fetch_time }}</div>
+</div>
+
+<div class="index-grid">
+
+    {% for stock in data.stocks %}
+    <div class="index-card {% if stock.percent > 0 %}green-card{% else %}red-card{% endif %}">
+
+        <div class="index-name">{{ stock.name }}</div>
+
+        <div class="index-value">{{ stock.cmp }}</div>
+
+        <div class="index-change">
+            {{ stock.change }}
+        </div>
+
+        <div class="index-percent">
+            {{ stock.percent }}%
+        </div>
+
+    </div>
+    {% endfor %}
+
+</div>
+
+{% endblock %}

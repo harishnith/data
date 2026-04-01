@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="top-header">
+    <h2>Top 5 Dashboard</h2>
+    <div class="fetch-time">Last fetch⏱ {{ data.fetch_time }}</div>
+</div>
+
+<!-- ================= NIFTY ================= -->
+<div class="section">
+    <h3>{{ data.nifty_title }}</h3>
+
+    <div class="grid">
+
+        <!-- GAINERS -->
+        <div class="card">
+            <h4>🚀 Gainers</h4>
+
+            <table class="pro-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Stock</th>
+                        <th>CMP</th>
+                        <th>% Change</th>
+                        <th>Change</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                {% for row in data.nifty_data[1:] %}
+                <tr>
+                    <td class="rank">{{ loop.index }}</td>
+                    <td class="stock">{{ row[0] }}</td>
+                    <td>{{ row[1] }}</td>
+                    <td class="green">{{ row[2] }}%</td>
+                    <td class="green">{{ row[3] }}</td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- LOSERS -->
+        <div class="card">
+            <h4>🔻 Losers</h4>
+
+            <table class="pro-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Stock</th>
+                        <th>CMP</th>
+                        <th>% Change</th>
+                        <th>Change</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                {% for row in data.nifty_data[1:] %}
+                <tr>
+                    <td class="rank">{{ loop.index }}</td>
+                    <td class="stock">{{ row[4] }}</td>
+                    <td>{{ row[5] }}</td>
+                    <td class="red">{{ row[6] }}%</td>
+                    <td class="red">{{ row[7] }}</td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+</div>
+
+<!-- ================= BANKNIFTY ================= -->
+<div class="section">
+    <h3>{{ data.bank_title }}</h3>
+
+    <div class="grid">
+
+        <!-- GAINERS -->
+        <div class="card">
+            <h4>🚀 Gainers</h4>
+
+            {% if data.bank_data[1][0] %}
+            <table class="pro-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Stock</th>
+                        <th>CMP</th>
+                        <th>% Change</th>
+                        <th>Change</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                {% for row in data.bank_data[1:] %}
+                <tr>
+                    <td class="rank">{{ loop.index }}</td>
+                    <td class="stock">{{ row[0] }}</td>
+                    <td>{{ row[1] }}</td>
+                    <td class="green">{{ row[2] }}%</td>
+                    <td class="green">{{ row[3] }}</td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p class="no-data">No Gainers Available</p>
+            {% endif %}
+        </div>
+
+        <!-- LOSERS -->
+        <div class="card">
+            <h4>🔻 Losers</h4>
+
+            <table class="pro-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Stock</th>
+                        <th>CMP</th>
+                        <th>% Change</th>
+                        <th>Change</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                {% for row in data.bank_data[1:] %}
+                <tr>
+                    <td class="rank">{{ loop.index }}</td>
+                    <td class="stock">{{ row[4] }}</td>
+                    <td>{{ row[5] }}</td>
+                    <td class="red">{{ row[6] }}%</td>
+                    <td class="red">{{ row[7] }}</td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+</div>
+
+{% endblock %}

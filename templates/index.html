@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="top-header">
+    <h2>Indices Dashboard</h2>
+    <div class="fetch-time">⏱ {{ data.fetch_time }}</div>
+</div>
+
+<div class="section">
+
+    <div class="card">
+
+        <table class="pro-table">
+
+            <!-- HEADER -->
+            <thead>
+                <tr>
+                    {% for col in data.index_data[0] %}
+                    <th>{{ col }}</th>
+                    {% endfor %}
+                </tr>
+            </thead>
+
+            <!-- DATA -->
+            <tbody>
+                {% for row in data.index_data[1:] %}
+                <tr>
+                    <td class="stock">{{ row[0] }}</td>
+                    <td>{{ row[1] }}</td>
+
+                    <!-- CHANGE -->
+                    {% if row[2]|float > 0 %}
+                        <td class="green">+{{ row[2] }}</td>
+                    {% else %}
+                        <td class="red">{{ row[2] }}</td>
+                    {% endif %}
+
+                    <!-- % CHANGE -->
+                    {% if row[3]|float > 0 %}
+                        <td class="green">+{{ row[3] }}%</td>
+                    {% else %}
+                        <td class="red">{{ row[3] }}%</td>
+                    {% endif %}
+                </tr>
+                {% endfor %}
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
+
+{% endblock %}
