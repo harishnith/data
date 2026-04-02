@@ -6,64 +6,53 @@
     <div class="fetch-time">⏱ {{ data.fetch_time }}</div>
 </div>
 
-<div class="grid">
+<!-- 🔥 MAIN 2 COLUMN LAYOUT -->
+<div class="dma-container">
 
-    <!-- NIFTY -->
-    <div class="card">
-        <h3>📈 Nifty 50</h3>
+    <!-- ================= NIFTY ================= -->
+    <div class="dma-box">
 
-        <table class="pro-table">
-            <tr>
-                <th>Level</th>
-                <th>Value</th>
-                <th>Status</th>
-            </tr>
+        <div class="dma-title">NIFTY 50</div>
 
-            {% for row in data.nifty %}
-            <tr>
-                <td><b>{{ row.level }}</b></td>
+        <!-- LIVE -->
+        <div class="dma-live">
+            LIVE <span>{{ data.nifty_live }}</span>
+        </div>
 
-                <td class="dma-value">{{ row.value }}</td>
+        <!-- LEVELS -->
+        {% for row in data.nifty %}
+        <div class="dma-row">
+            <span class="level">{{ row.level }}</span>
+            <span class="value">{{ row.value }}</span>
+            <span class="{% if row.status == 'Above' %}green{% else %}red{% endif %}">
+                {{ row.status }}
+            </span>
+        </div>
+        {% endfor %}
 
-                <td>
-                    {% if row.level != "Live" %}
-                    <span class="badge {% if row.status == 'Above' %}green-bg{% else %}red-bg{% endif %}">
-                        {{ row.status }}
-                    </span>
-                    {% endif %}
-                </td>
-            </tr>
-            {% endfor %}
-        </table>
     </div>
 
-    <!-- BANKNIFTY -->
-    <div class="card">
-        <h3>🏦 BankNifty</h3>
+    <!-- ================= BANK ================= -->
+    <div class="dma-box">
 
-        <table class="pro-table">
-            <tr>
-                <th>Level</th>
-                <th>Value</th>
-                <th>Status</th>
-            </tr>
+        <div class="dma-title">BANKNIFTY</div>
 
-            {% for row in data.bank %}
-            <tr>
-                <td><b>{{ row.level }}</b></td>
+        <!-- LIVE -->
+        <div class="dma-live">
+            LIVE <span>{{ data.bank_live }}</span>
+        </div>
 
-                <td class="dma-value">{{ row.value }}</td>
+        <!-- LEVELS -->
+        {% for row in data.bank %}
+        <div class="dma-row">
+            <span class="level">{{ row.level }}</span>
+            <span class="value">{{ row.value }}</span>
+            <span class="{% if row.status == 'Above' %}green{% else %}red{% endif %}">
+                {{ row.status }}
+            </span>
+        </div>
+        {% endfor %}
 
-                <td>
-                    {% if row.level != "Live" %}
-                    <span class="badge {% if row.status == 'Above' %}green-bg{% else %}red-bg{% endif %}">
-                        {{ row.status }}
-                    </span>
-                    {% endif %}
-                </td>
-            </tr>
-            {% endfor %}
-        </table>
     </div>
 
 </div>

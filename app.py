@@ -5,7 +5,6 @@ from google.oauth2.service_account import Credentials
 import gspread
 
 app = Flask(__name__)
-
 # =========================
 # 🔐 GOOGLE SHEETS SETUP
 # =========================
@@ -22,16 +21,15 @@ creds = Credentials.from_service_account_info(creds_dict, scopes=scope)
 client = gspread.authorize(creds)
 
 sheet = client.open("Nifty_OI_Data").worksheet("Dashboard")
-
 # =========================
 # 🏠 HOME DATA
 # =========================
 def get_home_data():
     return {
-        "trend": sheet.acell("H52").value,
-        "sentiment": sheet.acell("H53").value,
-        "pcr": sheet.acell("H54").value,
-        "vix": sheet.acell("H55").value
+        "trend": sheet.acell("H53").value,
+        "sentiment": sheet.acell("H54").value,
+        "pcr": sheet.acell("H55").value,
+        "vix": sheet.acell("H56").value
     }
 
 # =========================
@@ -85,40 +83,68 @@ def get_top5_data():
         }
 
 # =========================
+# 📊 Live DATA
+# =========================    
+    
+def get_live_data():
+    try:
+        return {
+            "nifty_live": float(sheet.acell("M36").value.replace(",", "")),
+            "bank_live": float(sheet.acell("P36").value.replace(",", ""))
+        }
+    except:
+        return {
+            "nifty_live": None,
+            "bank_live": None
+        }
+
+# =========================
 # 📊 DMA DATA
 # =========================
 def get_dma_data():
     try:
         fetch_time = sheet.acell("Q33").value
+
+        # ✅ Full DMA table
         raw = sheet.get("L35:Q45")
 
         nifty = []
         bank = []
 
-        for row in raw:
-            if "Nifty" in row or "Banknifty" in row:
-                continue
-
+        for i, row in enumerate(raw):
             if len(row) < 6:
                 continue
 
-            # NIFTY
+            # ---------------- NIFTY ----------------
             try:
-                nifty.append({
-                    "level": row[0],
-                    "value": float(row[1]),
-                    "status": row[2]
-                })
+                level_n = row[0]
+
+                if level_n:
+                    value_n = float(row[1].replace(",", ""))
+                    status_n = row[2] if len(row) > 2 else ""
+
+                    # ✅ Keep LIVE row also
+                    nifty.append({
+                        "level": level_n,
+                        "value": value_n,
+                        "status": status_n
+                    })
             except:
                 pass
 
-            # BANKNIFTY
+            # ---------------- BANKNIFTY ----------------
             try:
-                bank.append({
-                    "level": row[3],
-                    "value": float(row[4]),
-                    "status": row[5]
-                })
+                level_b = row[3]
+
+                if level_b:
+                    value_b = float(row[4].replace(",", ""))
+                    status_b = row[5] if len(row) > 5 else ""
+
+                    bank.append({
+                        "level": level_b,
+                        "value": value_b,
+                        "status": status_b
+                    })
             except:
                 pass
 
@@ -135,7 +161,6 @@ def get_dma_data():
             "nifty": [],
             "bank": []
         }
-
 # =========================
 # 🌐 INDEX DATA
 # =========================
@@ -214,8 +239,12 @@ def top5():
 
 @app.route("/dma")
 def dma():
-    return render_template("dma.html", data=get_dma_data())
+    dma_data = get_dma_data()
+    live_data = get_live_data()
 
+    data = {**dma_data, **live_data}
+
+    return render_template("dma.html", data=data)
 @app.route("/oi")
 def oi():
     return render_template("oi.html", data=get_oi_data())

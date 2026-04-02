@@ -322,3 +322,139 @@ body {
     0% { background: rgba(239,68,68,0.3); }
     100% { background: transparent; }
 }
+
+/* =========================
+   DMA PRO UI UPGRADE
+========================= */
+
+/* CONTAINER */
+.dma-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    margin: 20px;
+    border: 1px solid #1e293b;
+    border-radius: 12px;
+    overflow: hidden;
+    background: linear-gradient(145deg, #020617, #0f172a);
+}
+
+/* BOX */
+.dma-box {
+    padding: 20px;
+    border-right: 1px solid #1e293b;
+    position: relative;
+}
+
+.dma-box:last-child {
+    border-right: none;
+}
+
+/* CENTER DIVIDER GLOW 🔥 */
+.dma-container::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 10%;
+    height: 80%;
+    width: 1px;
+    background: linear-gradient(to bottom, transparent, #38bdf8, transparent);
+    opacity: 0.4;
+}
+
+/* TITLE */
+.dma-title {
+    font-size: 22px;
+    text-align: center;
+    margin-bottom: 15px;
+    color: #38bdf8;
+    letter-spacing: 1px;
+}
+
+/* LIVE ROW */
+.dma-live {
+    font-size: 20px;
+    padding: 12px;
+    border-bottom: 1px solid #1e293b;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* LIVE VALUE 🔥 */
+.dma-live span {
+    font-weight: bold;
+    font-size: 22px;
+    color: #22c55e;
+    text-shadow: 0 0 8px rgba(34,197,94,0.4);
+}
+
+/* ROW */
+.dma-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 5px;
+    border-bottom: 1px solid rgba(30,41,59,0.5);
+    transition: 0.2s;
+}
+
+/* HOVER EFFECT 🔥 */
+.dma-row:hover {
+    background: rgba(56,189,248,0.05);
+    transform: scale(1.01);
+}
+
+/* LEVEL */
+.level {
+    font-weight: 600;
+    color: #e2e8f0;
+}
+
+/* VALUE */
+.value {
+    color: #cbd5f5;
+    font-weight: 500;
+}
+
+/* STATUS COLORS */
+.green {
+    color: #22c55e;
+    font-weight: 600;
+    text-shadow: 0 0 6px rgba(34,197,94,0.3);
+}
+
+.red {
+    color: #ef4444;
+    font-weight: 600;
+    text-shadow: 0 0 6px rgba(239,68,68,0.3);
+}
+
+/* =========================
+   LIVE BLINK EFFECT 🔥
+========================= */
+@keyframes pulseGreen {
+    0% { text-shadow: 0 0 5px rgba(34,197,94,0.3); }
+    50% { text-shadow: 0 0 15px rgba(34,197,94,0.8); }
+    100% { text-shadow: 0 0 5px rgba(34,197,94,0.3); }
+}
+
+.dma-live span {
+    animation: pulseGreen 2s infinite;
+}
+
+/* =========================
+   MOBILE RESPONSIVE
+========================= */
+@media (max-width: 900px) {
+    .dma-container {
+        grid-template-columns: 1fr;
+    }
+
+    .dma-container::after {
+        display: none;
+    }
+
+    .dma-box {
+        border-right: none;
+        border-bottom: 1px solid #1e293b;
+    }
+}
