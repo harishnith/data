@@ -52,13 +52,14 @@ def get_oi_data():
             "oi_data": []
         }
 
+
 # =========================
-# 📊 Orderflow DATA
+# 📊 ORDERFLOW DATA
 # =========================
 def get_orderflow_data():
     try:
-        fetch_time = sheet.acell("N67").value
-        oi_data = sheet.get("H68:N74")
+        fetch_time = sheet.acell("N67").value   # ⏱ time
+        oi_data = sheet.get("H68:N74")          # 📊 table range
 
         return {
             "fetch_time": fetch_time,
@@ -66,7 +67,7 @@ def get_orderflow_data():
         }
 
     except Exception as e:
-        print("Order Flow Error:", e)
+        print("Orderflow Error:", e)
         return {
             "fetch_time": "Error",
             "oi_data": []
@@ -103,23 +104,27 @@ def get_top5_data():
 
 
 # =========================
-# 📊 Orderflow DATA
+# 📊 ORDERFLOW DATA
 # =========================
 def get_orderflow_data():
     try:
         fetch_time = sheet.acell("N67").value
-        oi_data = sheet.get("H68:N74")
+
+        nifty_data = sheet.get("H68:N74")     # NIFTY
+        bank_data = sheet.get("I75:N81")      # BANKNIFTY
 
         return {
             "fetch_time": fetch_time,
-            "orderflow_data": orderflow_data
+            "nifty_data": nifty_data,
+            "bank_data": bank_data
         }
 
     except Exception as e:
-        print("Order Flow Error:", e)
+        print("Orderflow Error:", e)
         return {
             "fetch_time": "Error",
-            "orderflow_data": []
+            "nifty_data": [],
+            "bank_data": []
         }
 # =========================
 # 📊 Live DATA
@@ -286,8 +291,8 @@ def dma():
     return render_template("dma.html", data=data)
     
 @app.route("/orderflow")
-def oi():
-    return render_template("orderflow.html", data=get_oi_data())
+def orderflow():
+    return render_template("orderflow.html", data=get_orderflow_data())
     
 @app.route("/oi")
 def oi():

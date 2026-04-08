@@ -458,3 +458,20 @@ body {
         border-bottom: 1px solid #1e293b;
     }
 }
+/* =========================
+   ORDERFLOW (2 TABLES)
+========================= */
+
+.orderflow-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin: 25px;
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+    .orderflow-grid {
+        grid-template-columns: 1fr;
+    }
+}
