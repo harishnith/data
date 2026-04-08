@@ -38,7 +38,7 @@ def get_home_data():
 def get_oi_data():
     try:
         fetch_time = sheet.acell("Q33").value
-        oi_data = sheet.get("C1:I6")
+        oi_data = sheet.get("B1:I6")
 
         return {
             "fetch_time": fetch_time,
