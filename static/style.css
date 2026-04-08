@@ -464,7 +464,7 @@ body {
 
 .orderflow-grid {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr;  /* 👈 IMPORTANT */
     gap: 20px;
     margin: 25px;
 }
