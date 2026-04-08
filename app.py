@@ -53,6 +53,25 @@ def get_oi_data():
         }
 
 # =========================
+# 📊 Orderflow DATA
+# =========================
+def get_orderflow_data():
+    try:
+        fetch_time = sheet.acell("N67").value
+        oi_data = sheet.get("H68:N74")
+
+        return {
+            "fetch_time": fetch_time,
+            "oi_data": oi_data
+        }
+
+    except Exception as e:
+        print("Order Flow Error:", e)
+        return {
+            "fetch_time": "Error",
+            "oi_data": []
+        }
+# =========================
 # 🔝 TOP 5 DATA
 # =========================
 def get_top5_data():
@@ -265,6 +284,11 @@ def dma():
     data = {**dma_data, **live_data}
 
     return render_template("dma.html", data=data)
+    
+@app.route("/orderflow")
+def oi():
+    return render_template("orderflow.html", data=get_oi_data())
+    
 @app.route("/oi")
 def oi():
     return render_template("oi.html", data=get_oi_data())

@@ -42,4 +42,49 @@
     </div>
 
 </div>
+=======
+{% extends "base.html" %}
+{% block content %}
+
+<div class="top-header">
+    <h2>Order Flow Dashboard</h2>
+    <div class="fetch-time">⏱ {{ data.fetch_time }}</div>
+</div>
+
+<!-- ================= TABLE ================= -->
+<div class="section">
+
+    <div class="card">
+        <table class="pro-table">
+
+            <!-- HEADERS -->
+            <thead>
+                <tr>
+                    {% for col in data.oi_data[0] %}
+                    <th>{{ col }}</th>
+                    {% endfor %}
+                </tr>
+            </thead>
+
+            <!-- DATA -->
+            <tbody>
+                {% for row in data.oi_data[1:] %}
+                <tr>
+                    {% for cell in row %}
+                        {% if "Bullish" in cell %}
+                            <td class="green">{{ cell }}</td>
+                        {% elif "Bearish" in cell %}
+                            <td class="red">{{ cell }}</td>
+                        {% else %}
+                            <td>{{ cell }}</td>
+                        {% endif %}
+                    {% endfor %}
+                </tr>
+                {% endfor %}
+            </tbody>
+
+        </table>
+    </div>
+
+</div>
 {% endblock %}
