@@ -475,38 +475,35 @@ body {
         grid-template-columns: 1fr;
     }
 }
-.intraday-container {
+.intraday-full {
     display: flex;
+    flex-direction: column;
     gap: 20px;
     margin-top: 20px;
 }
 
-.left-panel {
-    width: 20%;
-    border: 2px solid #4a90e2;
-    border-radius: 10px;
-    min-height: 400px;
-}
-
-.right-panel {
-    width: 80%;
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-}
-
-.intraday-box {
+.intraday-card {
     padding: 20px;
 }
 
-.row {
-    display: flex;
-    justify-content: space-between;
-    padding: 8px 0;
-    border-bottom: 1px solid rgba(255,255,255,0.1);
+/* TABLE STYLE */
+.intraday-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: center;
 }
 
-/* LTP BASE */
+.intraday-table th {
+    padding: 10px;
+    border-bottom: 1px solid rgba(255,255,255,0.2);
+}
+
+.intraday-table td {
+    padding: 12px;
+    font-size: 16px;
+}
+
+/* LTP STYLE */
 .ltp {
     font-weight: bold;
     font-size: 18px;
