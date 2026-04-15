@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="top-header">
+    <h2>Intraday Dashboard</h2>
+</div>
+
+<div class="intraday-container">
+
+    <div class="left-panel"></div>
+
+    <div class="right-panel">
+
+        <!-- NIFTY -->
+        <div class="card intraday-box">
+            <h3>Nifty 50</h3>
+
+            <div class="row">
+                <span>LTP</span>
+                <span id="nifty-ltp" class="ltp">{{ data.nifty.ltp }}</span>
+            </div>
+
+            <div class="row"><span>Open</span><span>{{ data.nifty.open }}</span></div>
+            <div class="row"><span>High</span><span>{{ data.nifty.high }}</span></div>
+            <div class="row"><span>Low</span><span>{{ data.nifty.low }}</span></div>
+            <div class="row"><span>Close</span><span>{{ data.nifty.close }}</span></div>
+        </div>
+
+        <!-- BANKNIFTY -->
+        <div class="card intraday-box">
+            <h3>BankNifty</h3>
+
+            <div class="row">
+                <span>LTP</span>
+                <span id="bank-ltp" class="ltp">{{ data.bank.ltp }}</span>
+            </div>
+
+            <div class="row"><span>Open</span><span>{{ data.bank.open }}</span></div>
+            <div class="row"><span>High</span><span>{{ data.bank.high }}</span></div>
+            <div class="row"><span>Low</span><span>{{ data.bank.low }}</span></div>
+            <div class="row"><span>Close</span><span>{{ data.bank.close }}</span></div>
+        </div>
+
+    </div>
+
+</div>
+
+<!-- JS (same as before) -->
+<script>
+let prevNifty = parseFloat("{{ data.nifty.ltp }}");
+let prevBank = parseFloat("{{ data.bank.ltp }}");
+
+setInterval(() => {
+
+    fetch('/intraday-data')
+    .then(res => res.json())
+    .then(newData => {
+
+        updateLTP("nifty-ltp", newData.nifty.ltp, prevNifty);
+        updateLTP("bank-ltp", newData.bank.ltp, prevBank);
+
+        prevNifty = newData.nifty.ltp;
+        prevBank = newData.bank.ltp;
+
+    });
+
+}, 10000);
+
+function updateLTP(id, newVal, oldVal) {
+    const el = document.getElementById(id);
+    el.innerText = newVal;
+
+    el.classList.remove("green-blink", "red-blink");
+
+    if (newVal > oldVal) {
+        el.classList.add("green-blink");
+    } else if (newVal < oldVal) {
+        el.classList.add("red-blink");
+    }
+}
+</script>
+
+{% endblock %}
