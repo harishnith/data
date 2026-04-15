@@ -3,6 +3,7 @@ import json
 from flask import Flask, render_template
 from google.oauth2.service_account import Credentials
 import gspread
+from flask import jsonify
 
 app = Flask(__name__)
 # =========================
@@ -52,26 +53,43 @@ def get_oi_data():
             "oi_data": []
         }
 
-
 # =========================
-# 📊 ORDERFLOW DATA
+# 📊 INTRADAY DATA
 # =========================
-def get_orderflow_data():
+def get_intraday_data():
     try:
-        fetch_time = sheet.acell("N67").value   # ⏱ time
-        oi_data = sheet.get("H68:N74")          # 📊 table range
+        def clean(val):
+            return float(str(val).replace(",", ""))
+
+        # 📊 NIFTY (I90:M90)
+        nifty = sheet.get("I90:M90")[0]
+
+        # 📊 BANKNIFTY (I94:M94)
+        bank = sheet.get("I94:M94")[0]
 
         return {
-            "fetch_time": fetch_time,
-            "oi_data": oi_data
+            "nifty": {
+                "ltp": clean(nifty[0]),
+                "open": clean(nifty[1]),
+                "high": clean(nifty[2]),
+                "low": clean(nifty[3]),
+                "close": clean(nifty[4]),
+            },
+            "bank": {
+                "ltp": clean(bank[0]),
+                "open": clean(bank[1]),
+                "high": clean(bank[2]),
+                "low": clean(bank[3]),
+                "close": clean(bank[4]),
+            }
         }
 
     except Exception as e:
-        print("Orderflow Error:", e)
+        print("Intraday Error:", e)
         return {
-            "fetch_time": "Error",
-            "oi_data": []
-        }
+            "nifty": {},
+            "bank": {}
+        }        
 # =========================
 # 🔝 TOP 5 DATA
 # =========================
@@ -309,6 +327,14 @@ def indices():
 @app.route("/stocks")
 def stocks():
     return render_template("stocks.html", data=get_stocks_data())
+@app.route("/intraday")
+def intraday():
+    return render_template("intraday.html", data=get_intraday_data())
+
+
+@app.route("/intraday-data")
+def intraday_data():
+    return jsonify(get_intraday_data())    
 
 # =========================
 # ▶️ RUN
