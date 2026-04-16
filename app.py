@@ -66,6 +66,9 @@ def get_intraday_data():
 
         # 📊 BANKNIFTY (I94:M94)
         bank = sheet.get("I94:M94")[0]
+        
+        # 📊 Sensex (I98:M98)
+        sensex = sheet.get("I98:M98")[0]
 
         return {
             "nifty": {
@@ -81,6 +84,13 @@ def get_intraday_data():
                 "high": clean(bank[2]),
                 "low": clean(bank[3]),
                 "close": clean(bank[4]),
+            },
+            "sensex": {
+                "ltp": clean(sensex[0]),
+                "open": clean(sensex[1]),
+                "high": clean(sensex[2]),
+                "low": clean(sensex[3]),
+                "close": clean(sensex[4]),
             }
         }
 
