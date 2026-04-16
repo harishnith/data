@@ -54,21 +54,26 @@ def get_oi_data():
         }
 
 # =========================
-# 📊 INTRADAY DATA
-# =========================
+# 📊 Intraday DATA
+# =========================        }
 def get_intraday_data():
     try:
         def clean(val):
-            return float(str(val).replace(",", ""))
+            try:
+                return float(str(val).replace(",", ""))
+            except:
+                return 0
 
-        # 📊 NIFTY (I90:M90)
-        nifty = sheet.get("I90:M90")[0]
+        def safe_row(range_name):
+            data = sheet.get(range_name)
+            if not data or len(data[0]) < 5:
+                return [0, 0, 0, 0, 0]
+            return data[0]
 
-        # 📊 BANKNIFTY (I94:M94)
-        bank = sheet.get("I94:M94")[0]
-        
-        # 📊 Sensex (I98:M98)
-        sensex = sheet.get("I98:M98")[0]
+        # SAFE FETCH
+        nifty = safe_row("I90:M90")
+        bank = safe_row("I94:M94")
+        sensex = safe_row("I98:M98")
 
         return {
             "nifty": {
@@ -97,9 +102,12 @@ def get_intraday_data():
     except Exception as e:
         print("Intraday Error:", e)
         return {
-            "nifty": {},
-            "bank": {}
-        }        
+            "nifty": {"ltp":0,"open":0,"high":0,"low":0,"close":0},
+            "bank": {"ltp":0,"open":0,"high":0,"low":0,"close":0},
+            "sensex": {"ltp":0,"open":0,"high":0,"low":0,"close":0}
+        }
+
+
 # =========================
 # 🔝 TOP 5 DATA
 # =========================
