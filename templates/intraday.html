@@ -5,67 +5,61 @@
     <h2>Intraday Dashboard</h2>
 </div>
 
-<div class="intraday-full">
+<div class="intraday-container">
 
-    <!-- ================= NIFTY ================= -->
-    <div class="card intraday-card">
+    <div class="left-panel"></div>
 
-        <h3>Nifty 50</h3>
+    <div class="right-panel">
 
-        <table class="intraday-table">
-            <thead>
-                <tr>
-                    <th>LTP</th>
-                    <th>Open</th>
-                    <th>High</th>
-                    <th>Low</th>
-                    <th>Close</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td id="nifty-ltp" class="ltp">{{ data.nifty.ltp }}</td>
-                    <td>{{ data.nifty.open }}</td>
-                    <td>{{ data.nifty.high }}</td>
-                    <td>{{ data.nifty.low }}</td>
-                    <td>{{ data.nifty.close }}</td>
-                </tr>
-            </tbody>
-        </table>
+        <!-- NIFTY -->
+        <div class="card intraday-box">
+            <h3>Nifty 50</h3>
 
-    </div>
+            <div class="row">
+                <span>LTP</span>
+                <span id="nifty-ltp" class="ltp">{{ data.nifty.ltp }}</span>
+            </div>
 
-    <!-- ================= BANKNIFTY ================= -->
-    <div class="card intraday-card">
+            <div class="row"><span>Open</span><span>{{ data.nifty.open }}</span></div>
+            <div class="row"><span>High</span><span>{{ data.nifty.high }}</span></div>
+            <div class="row"><span>Low</span><span>{{ data.nifty.low }}</span></div>
+            <div class="row"><span>Close</span><span>{{ data.nifty.close }}</span></div>
+        </div>
 
-        <h3>BankNifty</h3>
+        <!-- BANKNIFTY -->
+        <div class="card intraday-box">
+            <h3>BankNifty</h3>
 
-        <table class="intraday-table">
-            <thead>
-                <tr>
-                    <th>LTP</th>
-                    <th>Open</th>
-                    <th>High</th>
-                    <th>Low</th>
-                    <th>Close</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td id="bank-ltp" class="ltp">{{ data.bank.ltp }}</td>
-                    <td>{{ data.bank.open }}</td>
-                    <td>{{ data.bank.high }}</td>
-                    <td>{{ data.bank.low }}</td>
-                    <td>{{ data.bank.close }}</td>
-                </tr>
-            </tbody>
-        </table>
+            <div class="row">
+                <span>LTP</span>
+                <span id="bank-ltp" class="ltp">{{ data.bank.ltp }}</span>
+            </div>
+
+            <div class="row"><span>Open</span><span>{{ data.bank.open }}</span></div>
+            <div class="row"><span>High</span><span>{{ data.bank.high }}</span></div>
+            <div class="row"><span>Low</span><span>{{ data.bank.low }}</span></div>
+            <div class="row"><span>Close</span><span>{{ data.bank.close }}</span></div>
+        </div>
+		
+		<div class="card intraday-box">
+            <h3>Sensex</h3>
+
+            <div class="row">
+                <span>LTP</span>
+                <span id="Sensex-ltp" class="ltp">{{ data.Sensex.ltp }}</span>
+            </div>
+
+            <div class="row"><span>Open</span><span>{{ data.Sensex.open }}</span></div>
+            <div class="row"><span>High</span><span>{{ data.Sensex.high }}</span></div>
+            <div class="row"><span>Low</span><span>{{ data.Sensex.low }}</span></div>
+            <div class="row"><span>Close</span><span>{{ data.Sensex.close }}</span></div>
+        </div>
 
     </div>
 
 </div>
 
-<!-- 🔥 BLINK SCRIPT -->
+<!-- JS (same as before) -->
 <script>
 let prevNifty = parseFloat("{{ data.nifty.ltp }}");
 let prevBank = parseFloat("{{ data.bank.ltp }}");
