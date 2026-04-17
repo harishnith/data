@@ -559,7 +559,7 @@ body {
     font-weight: bold;
 }
 /* =========================
-   CHAIN UI 🔥
+   CHAIN FINAL UI 🔥
 ========================= */
 
 .chain-container {
@@ -567,10 +567,6 @@ body {
     grid-template-columns: repeat(3, 1fr);
     gap: 20px;
     padding: 20px;
-}
-
-.chain-box {
-    padding: 15px;
 }
 
 .chain-row {
@@ -586,26 +582,20 @@ body {
     font-size: 12px;
 }
 
-/* MAX CALL */
+/* 🔵 CMP ONLY */
+.cmp {
+    color: #38bdf8;
+    font-weight: bold;
+}
+
+/* 🔴 MAX CALL */
 .max-call {
     color: #ff4d4d;
     animation: blinkRed 1s infinite;
 }
 
-/* MAX PUT */
+/* 🟢 MAX PUT */
 .max-put {
     color: #00ff9c;
     animation: blinkGreen 1s infinite;
-}
-
-/* CMP */
-.cmp {
-    color: #38bdf8;
-    animation: pulse 1.5s infinite;
-}
-
-@keyframes pulse {
-    0% { opacity: 0.6; }
-    50% { opacity: 1; }
-    100% { opacity: 0.6; }
 }
