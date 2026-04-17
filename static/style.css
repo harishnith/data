@@ -599,3 +599,12 @@ body {
     color: #00ff9c;
     animation: blinkGreen 1s infinite;
 }
+
+/* 2ND LEVEL */
+.second-call { color: #ff944d; }
+.second-put { color: #eab308; }
+
+/* BUILD-UP */
+.buildup {
+    text-shadow: 0 0 8px currentColor;
+}
