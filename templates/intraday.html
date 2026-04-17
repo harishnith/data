@@ -5,118 +5,118 @@
     <h2>Intraday Dashboard</h2>
 </div>
 
-<div style="margin:20px; display:flex; flex-direction:column; gap:30px;">
+<div class="intraday-container">
+    <div class="left-panel"></div>
 
-    <!-- NIFTY -->
-    <div class="card">
-        <h3>Nifty 50</h3>
+    <div class="right-panel">
 
-        <table class="pro-table" style="text-align:center;">
-            <tr>
-                <th>LTP</th>
-                <th>Open</th>
-                <th>High</th>
-                <th>Low</th>
-                <th>Close</th>
-            </tr>
-            <tr>
-                <td id="nifty-ltp" class="ltp">{{ data.nifty.ltp }}</td>
-                <td id="nifty-open">{{ data.nifty.open }}</td>
-                <td id="nifty-high">{{ data.nifty.high }}</td>
-                <td id="nifty-low">{{ data.nifty.low }}</td>
-                <td id="nifty-close">{{ data.nifty.close }}</td>
-            </tr>
-        </table>
+        <!-- NIFTY -->
+        <div class="card intraday-box">
+            <h3>Nifty 50</h3>
+
+            <div class="grid-row header">
+                <div>LTP</div>
+                <div>Open</div>
+                <div>High</div>
+                <div>Low</div>
+                <div>Close</div>
+            </div>
+
+            <div class="grid-row values">
+                <div id="nifty-ltp" class="ltp">{{ data.nifty.ltp }}</div>
+                <div id="nifty-open">{{ data.nifty.open }}</div>
+                <div id="nifty-high">{{ data.nifty.high }}</div>
+                <div id="nifty-low">{{ data.nifty.low }}</div>
+                <div id="nifty-close">{{ data.nifty.close }}</div>
+            </div>
+        </div>
+
+        <!-- BANKNIFTY -->
+        <div class="card intraday-box">
+            <h3>BankNifty</h3>
+
+            <div class="grid-row header">
+                <div>LTP</div>
+                <div>Open</div>
+                <div>High</div>
+                <div>Low</div>
+                <div>Close</div>
+            </div>
+
+            <div class="grid-row values">
+                <div id="bank-ltp" class="ltp">{{ data.bank.ltp }}</div>
+                <div id="bank-open">{{ data.bank.open }}</div>
+                <div id="bank-high">{{ data.bank.high }}</div>
+                <div id="bank-low">{{ data.bank.low }}</div>
+                <div id="bank-close">{{ data.bank.close }}</div>
+            </div>
+        </div>
+
+        <!-- SENSEX -->
+        <div class="card intraday-box">
+            <h3>Sensex</h3>
+
+            <div class="grid-row header">
+                <div>LTP</div>
+                <div>Open</div>
+                <div>High</div>
+                <div>Low</div>
+                <div>Close</div>
+            </div>
+
+            <div class="grid-row values">
+                <div id="sensex-ltp" class="ltp">{{ data.sensex.ltp }}</div>
+                <div id="sensex-open">{{ data.sensex.open }}</div>
+                <div id="sensex-high">{{ data.sensex.high }}</div>
+                <div id="sensex-low">{{ data.sensex.low }}</div>
+                <div id="sensex-close">{{ data.sensex.close }}</div>
+            </div>
+        </div>
+
     </div>
-
-    <!-- BANKNIFTY -->
-    <div class="card">
-        <h3>BankNifty</h3>
-
-        <table class="pro-table" style="text-align:center;">
-            <tr>
-                <th>LTP</th>
-                <th>Open</th>
-                <th>High</th>
-                <th>Low</th>
-                <th>Close</th>
-            </tr>
-            <tr>
-                <td id="bank-ltp" class="ltp">{{ data.bank.ltp }}</td>
-                <td id="bank-open">{{ data.bank.open }}</td>
-                <td id="bank-high">{{ data.bank.high }}</td>
-                <td id="bank-low">{{ data.bank.low }}</td>
-                <td id="bank-close">{{ data.bank.close }}</td>
-            </tr>
-        </table>
-    </div>
-
-    <!-- SENSEX -->
-    <div class="card">
-        <h3>Sensex</h3>
-
-        <table class="pro-table" style="text-align:center;">
-            <tr>
-                <th>LTP</th>
-                <th>Open</th>
-                <th>High</th>
-                <th>Low</th>
-                <th>Close</th>
-            </tr>
-            <tr>
-                <td id="sensex-ltp" class="ltp">{{ data.sensex.ltp }}</td>
-                <td id="sensex-open">{{ data.sensex.open }}</td>
-                <td id="sensex-high">{{ data.sensex.high }}</td>
-                <td id="sensex-low">{{ data.sensex.low }}</td>
-                <td id="sensex-close">{{ data.sensex.close }}</td>
-            </tr>
-        </table>
-    </div>
-
 </div>
 
 <script>
-let prev = {
-    nifty: parseFloat("{{ data.nifty.ltp }}") || 0,
-    bank: parseFloat("{{ data.bank.ltp }}") || 0,
-    sensex: parseFloat("{{ data.sensex.ltp }}") || 0
-};
+let prevNifty = parseFloat("{{ data.nifty.ltp }}") || 0;
+let prevBank = parseFloat("{{ data.bank.ltp }}") || 0;
+let prevSensex = parseFloat("{{ data.sensex.ltp }}") || 0;
 
 setInterval(() => {
-
     fetch('/intraday-data')
     .then(res => res.json())
     .then(d => {
 
-        update("nifty", d.nifty);
-        update("bank", d.bank);
-        update("sensex", d.sensex);
+        update("nifty", d.nifty, prevNifty);
+        prevNifty = d.nifty.ltp;
+
+        update("bank", d.bank, prevBank);
+        prevBank = d.bank.ltp;
+
+        update("sensex", d.sensex, prevSensex);
+        prevSensex = d.sensex.ltp;
 
     });
-
 }, 5000);
 
-function update(prefix, data) {
-    updateLTP(prefix + "-ltp", data.ltp, prev[prefix]);
-    prev[prefix] = data.ltp;
-
-    set(prefix + "-open", data.open);
-    set(prefix + "-high", data.high);
-    set(prefix + "-low", data.low);
-    set(prefix + "-close", data.close);
+function update(prefix, data, prev) {
+    updateLTP(prefix + "-ltp", data.ltp, prev);
+    setText(prefix + "-open", data.open);
+    setText(prefix + "-high", data.high);
+    setText(prefix + "-low", data.low);
+    setText(prefix + "-close", data.close);
 }
 
-function updateLTP(id, val, old) {
+function updateLTP(id, val, prev) {
     const el = document.getElementById(id);
     el.innerText = val;
 
     el.classList.remove("green-blink", "red-blink");
 
-    if (val > old) el.classList.add("green-blink");
-    else if (val < old) el.classList.add("red-blink");
+    if (val > prev) el.classList.add("green-blink");
+    else if (val < prev) el.classList.add("red-blink");
 }
 
-function set(id, val) {
+function setText(id, val) {
     const el = document.getElementById(id);
     if (el) el.innerText = val;
 }
