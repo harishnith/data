@@ -51,7 +51,6 @@ def get_oi_data():
         return {
             "fetch_time": "Error",
             "oi_data": []
-        }
 
 # =========================
 # 📊 Intraday DATA
@@ -109,37 +108,6 @@ def get_intraday_data():
 
 
 # =========================
-# 🔝 TOP 5 DATA
-# =========================
-def get_top5_data():
-    try:
-        fetch_time = sheet.acell("I33").value
-        nifty_title = sheet.acell("E34").value
-        nifty_data = sheet.get("B35:I40")
-
-        bank_title = sheet.acell("E42").value
-        bank_data = sheet.get("B43:I48")
-
-        return {
-            "fetch_time": fetch_time,
-            "nifty_title": nifty_title,
-            "nifty_data": nifty_data,
-            "bank_title": bank_title,
-            "bank_data": bank_data
-        }
-
-    except Exception as e:
-        print("Top5 Error:", e)
-        return {
-            "fetch_time": "Error",
-            "nifty_title": "NIFTY",
-            "nifty_data": [],
-            "bank_title": "BANKNIFTY",
-            "bank_data": []
-        }
-
-
-# =========================
 # 📊 ORDERFLOW DATA
 # =========================
 def get_orderflow_data():
@@ -162,6 +130,47 @@ def get_orderflow_data():
             "nifty_data": [],
             "bank_data": []
         }
+        
+ def get_chain_data():
+    try:
+        def clean(x):
+            try:
+                return float(str(x).replace(",", "").replace("M","000000").replace("K","000"))
+            except:
+                return 0
+
+        def get_block(call_col, strike_col, put_col):
+            calls = sheet.get(f"{call_col}106:{call_col}126")
+            strikes = sheet.get(f"{strike_col}106:{strike_col}126")
+            puts = sheet.get(f"{put_col}106:{put_col}126")
+
+            data = []
+
+            for i in range(len(strikes)):
+                try:
+                    data.append({
+                        "call": clean(calls[i][0]),
+                        "strike": clean(strikes[i][0]),
+                        "put": clean(puts[i][0])
+                    })
+                except:
+                    pass
+
+            return data
+
+        nifty = get_block("I", "J", "K")
+        bank = get_block("L", "M", "N")
+        sensex = get_block("O", "P", "Q")
+
+        return {
+            "nifty": nifty,
+            "bank": bank,
+            "sensex": sensex
+        }
+
+    except Exception as e:
+        print("CHAIN ERROR:", e)
+        return {"nifty": [], "bank": [], "sensex": []}       
 # =========================
 # 📊 Live DATA
 # =========================    
@@ -348,6 +357,14 @@ def stocks():
 @app.route("/intraday")
 def intraday():
     return render_template("intraday.html", data=get_intraday_data())
+    
+@app.route("/chain")
+def chain():
+    return render_template("chain.html", data=get_chain_data())
+
+@app.route("/chain-data")
+def chain_data():
+    return jsonify(get_chain_data())
 
 
 @app.route("/intraday-data")
