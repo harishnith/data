@@ -51,7 +51,7 @@ def get_oi_data():
         return {
             "fetch_time": "Error",
             "oi_data": []
-
+        }
 # =========================
 # 📊 Intraday DATA
 # =========================        }
