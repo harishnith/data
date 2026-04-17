@@ -530,3 +530,31 @@ body {
     0% { background-color: rgba(255,77,77,0.3); }
     100% { background-color: transparent; }
 }
+
+/* =========================
+   INTRADAY GRID FIX 🔥
+========================= */
+
+.grid-row {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    text-align: center;
+    padding: 10px 0;
+}
+
+.grid-row.header {
+    color: #94a3b8;
+    font-size: 13px;
+    border-bottom: 1px solid #1e293b;
+}
+
+.grid-row.values {
+    font-size: 16px;
+    font-weight: 500;
+    color: #e2e8f0;
+}
+
+.grid-row.values div:first-child {
+    color: #00ff9c;
+    font-weight: bold;
+}
