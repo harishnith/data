@@ -6,62 +6,59 @@
 </div>
 
 <div class="chain-container">
-
-    <div class="card chain-box">
-        <h3>Nifty</h3>
-        <div id="nifty-chain"></div>
-    </div>
-
-    <div class="card chain-box">
-        <h3>BankNifty</h3>
-        <div id="bank-chain"></div>
-    </div>
-
-    <div class="card chain-box">
-        <h3>Sensex</h3>
-        <div id="sensex-chain"></div>
-    </div>
-
+    <div class="card"><h3>Nifty</h3><div id="nifty-chain"></div></div>
+    <div class="card"><h3>BankNifty</h3><div id="bank-chain"></div></div>
+    <div class="card"><h3>Sensex</h3><div id="sensex-chain"></div></div>
 </div>
 
 <script>
+let prevData = {};
+
 function formatOI(val) {
-    if (val >= 1e9) return (val/1e9).toFixed(1) + "B";
-    if (val >= 1e6) return (val/1e6).toFixed(1) + "M";
-    if (val >= 1e3) return (val/1e3).toFixed(1) + "K";
+    if (val >= 1e6) return (val/1e6).toFixed(1)+"M";
+    if (val >= 1e3) return (val/1e3).toFixed(1)+"K";
     return val;
 }
 
 function render(id, data) {
 
-    let maxCall = Math.max(...data.map(x => x.call));
-    let maxPut = Math.max(...data.map(x => x.put));
+    let calls = data.map(x => x.call);
+    let puts = data.map(x => x.put);
 
-    // 👉 CMP = middle row (11th row of 21)
-    let cmpStrike = data[Math.floor(data.length / 2)].strike;
+    let topCalls = [...calls].sort((a,b)=>b-a).slice(0,2);
+    let topPuts = [...puts].sort((a,b)=>b-a).slice(0,2);
+
+    let cmpStrike = data[Math.floor(data.length/2)].strike;
 
     let html = `
-        <div class="chain-row header">
-            <div>Call OI</div>
-            <div>Strike</div>
-            <div>Put OI</div>
-        </div>
-    `;
+    <div class="chain-row header">
+        <div>Call OI</div>
+        <div>Strike</div>
+        <div>Put OI</div>
+    </div>`;
 
-    data.forEach(row => {
+    data.forEach((row,i)=>{
 
-        let callClass = "";
-        let putClass = "";
-        let strikeClass = "";
+        let callClass="";
+        let putClass="";
+        let strikeClass="";
 
-        // MAX CALL → RED BLINK
-        if (row.call === maxCall) callClass = "max-call";
+        // 🔴 MAX + 🟠 SECOND CALL
+        if(row.call===topCalls[0]) callClass="max-call";
+        else if(row.call===topCalls[1]) callClass="second-call";
 
-        // MAX PUT → GREEN BLINK
-        if (row.put === maxPut) putClass = "max-put";
+        // 🟢 MAX + 🟡 SECOND PUT
+        if(row.put===topPuts[0]) putClass="max-put";
+        else if(row.put===topPuts[1]) putClass="second-put";
 
-        // CMP → ONLY BLUE
-        if (row.strike === cmpStrike) strikeClass = "cmp";
+        // 🔵 CMP ONLY
+        if(row.strike===cmpStrike) strikeClass="cmp";
+
+        // 🔥 BUILD-UP
+        if(prevData[id] && prevData[id][i]){
+            if(row.call > prevData[id][i].call) callClass+=" buildup";
+            if(row.put > prevData[id][i].put) putClass+=" buildup";
+        }
 
         html += `
         <div class="chain-row">
@@ -72,22 +69,21 @@ function render(id, data) {
     });
 
     document.getElementById(id).innerHTML = html;
+    prevData[id]=data;
 }
 
-function loadChain() {
+function loadChain(){
     fetch('/chain-data')
-    .then(res => res.json())
-    .then(d => {
+    .then(r=>r.json())
+    .then(d=>{
         render("nifty-chain", d.nifty);
         render("bank-chain", d.bank);
         render("sensex-chain", d.sensex);
     });
 }
 
-// ✅ 3 MIN REFRESH
 loadChain();
-setInterval(loadChain, 180000);
-
+setInterval(loadChain,180000);
 </script>
 
 {% endblock %}
