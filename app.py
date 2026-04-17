@@ -111,7 +111,7 @@ def get_chain_data():
     try:
         def clean(x):
             try:
-                return float(str(x).replace(",", "").replace("M","000000").replace("K","000"))
+                return float(str(x).replace(",", ""))
             except:
                 return 0
 
@@ -121,6 +121,7 @@ def get_chain_data():
             puts = sheet.get(f"{put_col}106:{put_col}126")
 
             data = []
+
             for i in range(len(strikes)):
                 try:
                     data.append({
@@ -130,12 +131,30 @@ def get_chain_data():
                     })
                 except:
                     pass
+
             return data
 
+        nifty = get_block("I","J","K")
+        bank = get_block("L","M","N")
+        sensex = get_block("O","P","Q")
+
+        # 🔥 MAX PAIN
+        def max_pain(data):
+            pain = {}
+            for row in data:
+                strike = row["strike"]
+                pain[strike] = abs(row["call"] - row["put"])
+            return min(pain, key=pain.get) if pain else 0
+
         return {
-            "nifty": get_block("I","J","K"),
-            "bank": get_block("L","M","N"),
-            "sensex": get_block("O","P","Q")
+            "nifty": nifty,
+            "bank": bank,
+            "sensex": sensex,
+            "maxpain": {
+                "nifty": max_pain(nifty),
+                "bank": max_pain(bank),
+                "sensex": max_pain(sensex)
+            }
         }
 
     except Exception as e:
@@ -143,9 +162,9 @@ def get_chain_data():
         return {
             "nifty": [],
             "bank": [],
-            "sensex": []
+            "sensex": [],
+            "maxpain": {}
         }
-
 # =========================
 # 🌐 ROUTES
 # =========================
