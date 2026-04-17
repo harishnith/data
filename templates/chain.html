@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="top-header">
+    <h2>Option Chain</h2>
+</div>
+
+<div class="chain-container">
+
+    <!-- NIFTY -->
+    <div class="card chain-box">
+        <h3>Nifty</h3>
+        <div id="nifty-chain"></div>
+    </div>
+
+    <!-- BANK -->
+    <div class="card chain-box">
+        <h3>BankNifty</h3>
+        <div id="bank-chain"></div>
+    </div>
+
+    <!-- SENSEX -->
+    <div class="card chain-box">
+        <h3>Sensex</h3>
+        <div id="sensex-chain"></div>
+    </div>
+
+</div>
+
+<script>
+let prevData = {};
+
+function render(id, data) {
+
+    let maxCall = Math.max(...data.map(x => x.call));
+    let maxPut = Math.max(...data.map(x => x.put));
+
+    let html = `
+        <div class="chain-row header">
+            <div>Call OI</div>
+            <div>Strike</div>
+            <div>Put OI</div>
+        </div>
+    `;
+
+    data.forEach(row => {
+
+        let callClass = row.call === maxCall ? "max-call" : "";
+        let putClass = row.put === maxPut ? "max-put" : "";
+
+        html += `
+        <div class="chain-row">
+            <div class="${callClass}">${row.call}</div>
+            <div class="cmp">${row.strike}</div>
+            <div class="${putClass}">${row.put}</div>
+        </div>`;
+    });
+
+    document.getElementById(id).innerHTML = html;
+}
+
+function loadChain() {
+    fetch('/chain-data')
+    .then(res => res.json())
+    .then(d => {
+        render("nifty-chain", d.nifty);
+        render("bank-chain", d.bank);
+        render("sensex-chain", d.sensex);
+    });
+}
+
+setInterval(loadChain, 5000);
+loadChain();
+</script>
+
+{% endblock %}
