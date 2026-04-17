@@ -77,49 +77,66 @@
 </div>
 
 <script>
-let prevNifty = parseFloat("{{ data.nifty.ltp }}") || 0;
-let prevBank = parseFloat("{{ data.bank.ltp }}") || 0;
-let prevSensex = parseFloat("{{ data.sensex.ltp }}") || 0;
+let prev = {
+    nifty: parseFloat("{{ data.nifty.ltp }}") || 0,
+    bank: parseFloat("{{ data.bank.ltp }}") || 0,
+    sensex: parseFloat("{{ data.sensex.ltp }}") || 0
+};
 
-setInterval(() => {
-    fetch('/intraday-data')
-    .then(res => res.json())
-    .then(d => {
-
-        update("nifty", d.nifty, prevNifty);
-        prevNifty = d.nifty.ltp;
-
-        update("bank", d.bank, prevBank);
-        prevBank = d.bank.ltp;
-
-        update("sensex", d.sensex, prevSensex);
-        prevSensex = d.sensex.ltp;
-
-    });
-}, 5000);
-
-function update(prefix, data, prev) {
-    updateLTP(prefix + "-ltp", data.ltp, prev);
-    setText(prefix + "-open", data.open);
-    setText(prefix + "-high", data.high);
-    setText(prefix + "-low", data.low);
-    setText(prefix + "-close", data.close);
-}
-
-function updateLTP(id, val, prev) {
+function updateLTP(id, newVal, key) {
     const el = document.getElementById(id);
-    el.innerText = val;
 
+    if (!el) return;
+
+    // remove old
     el.classList.remove("green-blink", "red-blink");
 
-    if (val > prev) el.classList.add("green-blink");
-    else if (val < prev) el.classList.add("red-blink");
+    if (newVal > prev[key]) {
+        el.classList.add("green-blink");
+    } else if (newVal < prev[key]) {
+        el.classList.add("red-blink");
+    }
+
+    el.innerText = newVal;
+    prev[key] = newVal;
 }
 
 function setText(id, val) {
     const el = document.getElementById(id);
     if (el) el.innerText = val;
 }
+
+function loadIntraday() {
+    fetch('/intraday-data')
+    .then(res => res.json())
+    .then(d => {
+
+        updateLTP("nifty-ltp", d.nifty.ltp, "nifty");
+        updateLTP("bank-ltp", d.bank.ltp, "bank");
+        updateLTP("sensex-ltp", d.sensex.ltp, "sensex");
+
+        setText("nifty-open", d.nifty.open);
+        setText("nifty-high", d.nifty.high);
+        setText("nifty-low", d.nifty.low);
+        setText("nifty-close", d.nifty.close);
+
+        setText("bank-open", d.bank.open);
+        setText("bank-high", d.bank.high);
+        setText("bank-low", d.bank.low);
+        setText("bank-close", d.bank.close);
+
+        setText("sensex-open", d.sensex.open);
+        setText("sensex-high", d.sensex.high);
+        setText("sensex-low", d.sensex.low);
+        setText("sensex-close", d.sensex.close);
+
+    });
+}
+
+// initial + loop
+loadIntraday();
+setInterval(loadIntraday, 3000); // fast refresh
+
 </script>
 
 {% endblock %}
