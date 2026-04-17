@@ -1,27 +1,25 @@
 import os
 import json
-from flask import Flask, render_template
+from flask import Flask, render_template, jsonify
 from google.oauth2.service_account import Credentials
 import gspread
-from flask import jsonify
 
 app = Flask(__name__)
+
 # =========================
 # 🔐 GOOGLE SHEETS SETUP
 # =========================
-
 scope = [
     "https://www.googleapis.com/auth/spreadsheets",
     "https://www.googleapis.com/auth/drive"
 ]
 
-# ✅ Read credentials from Render ENV
 creds_dict = json.loads(os.environ["GOOGLE_CREDENTIALS"])
-
 creds = Credentials.from_service_account_info(creds_dict, scopes=scope)
 client = gspread.authorize(creds)
 
 sheet = client.open("Nifty_OI_Data").worksheet("Dashboard")
+
 # =========================
 # 🏠 HOME DATA
 # =========================
@@ -52,9 +50,10 @@ def get_oi_data():
             "fetch_time": "Error",
             "oi_data": []
         }
+
 # =========================
-# 📊 Intraday DATA
-# =========================        }
+# 📊 INTRADAY DATA
+# =========================
 def get_intraday_data():
     try:
         def clean(val):
@@ -69,7 +68,6 @@ def get_intraday_data():
                 return [0, 0, 0, 0, 0]
             return data[0]
 
-        # SAFE FETCH
         nifty = safe_row("I90:M90")
         bank = safe_row("I94:M94")
         sensex = safe_row("I98:M98")
@@ -106,34 +104,10 @@ def get_intraday_data():
             "sensex": {"ltp":0,"open":0,"high":0,"low":0,"close":0}
         }
 
-
 # =========================
-# 📊 ORDERFLOW DATA
+# 📊 CHAIN DATA (NEW)
 # =========================
-def get_orderflow_data():
-    try:
-        fetch_time = sheet.acell("N67").value
-
-        nifty_data = sheet.get("H68:N74")     # NIFTY
-        bank_data = sheet.get("I75:N81")      # BANKNIFTY
-
-        return {
-            "fetch_time": fetch_time,
-            "nifty_data": nifty_data,
-            "bank_data": bank_data
-        }
-
-    except Exception as e:
-        print("Orderflow Error:", e)
-        return {
-            "fetch_time": "Error",
-            "nifty_data": [],
-            "bank_data": []
-        }
-# =========================
-# 📊 Option Chain DATA
-# =========================     
- def get_chain_data():
+def get_chain_data():
     try:
         def clean(x):
             try:
@@ -147,7 +121,6 @@ def get_orderflow_data():
             puts = sheet.get(f"{put_col}106:{put_col}126")
 
             data = []
-
             for i in range(len(strikes)):
                 try:
                     data.append({
@@ -157,163 +130,20 @@ def get_orderflow_data():
                     })
                 except:
                     pass
-
             return data
 
-        nifty = get_block("I", "J", "K")
-        bank = get_block("L", "M", "N")
-        sensex = get_block("O", "P", "Q")
-
         return {
-            "nifty": nifty,
-            "bank": bank,
-            "sensex": sensex
+            "nifty": get_block("I","J","K"),
+            "bank": get_block("L","M","N"),
+            "sensex": get_block("O","P","Q")
         }
 
     except Exception as e:
         print("CHAIN ERROR:", e)
-        return {"nifty": [], "bank": [], "sensex": []}       
-# =========================
-# 📊 Live DATA
-# =========================    
-    
-def get_live_data():
-    try:
         return {
-            "nifty_live": float(sheet.acell("M36").value.replace(",", "")),
-            "bank_live": float(sheet.acell("P36").value.replace(",", ""))
-        }
-    except:
-        return {
-            "nifty_live": None,
-            "bank_live": None
-        }
-
-# =========================
-# 📊 DMA DATA
-# =========================
-def get_dma_data():
-    try:
-        fetch_time = sheet.acell("Q33").value
-
-        # ✅ Full DMA table
-        raw = sheet.get("L35:Q45")
-
-        nifty = []
-        bank = []
-
-        for i, row in enumerate(raw):
-            if len(row) < 6:
-                continue
-
-            # ---------------- NIFTY ----------------
-            try:
-                level_n = row[0]
-
-                if level_n:
-                    value_n = float(row[1].replace(",", ""))
-                    status_n = row[2] if len(row) > 2 else ""
-
-                    # ✅ Keep LIVE row also
-                    nifty.append({
-                        "level": level_n,
-                        "value": value_n,
-                        "status": status_n
-                    })
-            except:
-                pass
-
-            # ---------------- BANKNIFTY ----------------
-            try:
-                level_b = row[3]
-
-                if level_b:
-                    value_b = float(row[4].replace(",", ""))
-                    status_b = row[5] if len(row) > 5 else ""
-
-                    bank.append({
-                        "level": level_b,
-                        "value": value_b,
-                        "status": status_b
-                    })
-            except:
-                pass
-
-        return {
-            "fetch_time": fetch_time,
-            "nifty": nifty,
-            "bank": bank
-        }
-
-    except Exception as e:
-        print("DMA Error:", e)
-        return {
-            "fetch_time": "Error",
             "nifty": [],
-            "bank": []
-        }
-# =========================
-# 🌐 INDEX DATA
-# =========================
-def get_index_data():
-    try:
-        fetch_time = sheet.acell("E52").value
-        raw_data = sheet.get("B53:E63")[1:]
-
-        index_data = sorted(
-            raw_data,
-            key=lambda x: float(x[3]),
-            reverse=True
-        )
-
-        return {
-            "fetch_time": fetch_time,
-            "index_data": index_data
-        }
-
-    except Exception as e:
-        print("Index Error:", e)
-        return {
-            "fetch_time": "Error",
-            "index_data": []
-        }
-
-# =========================
-# 📈 STOCKS DATA
-# =========================
-def get_stocks_data():
-    try:
-        fetch_time = sheet.acell("E66").value
-        raw = sheet.get("B67:E117")
-
-        stocks = []
-
-        for row in raw:
-            if len(row) < 4:
-                continue
-
-            try:
-                stocks.append({
-                    "name": row[0],
-                    "cmp": float(row[1]),
-                    "percent": float(row[2]),
-                    "change": float(row[3])
-                })
-            except:
-                pass
-
-        stocks = sorted(stocks, key=lambda x: x["percent"], reverse=True)
-
-        return {
-            "fetch_time": fetch_time,
-            "stocks": stocks
-        }
-
-    except Exception as e:
-        print("Stock Error:", e)
-        return {
-            "fetch_time": "Error",
-            "stocks": []
+            "bank": [],
+            "sensex": []
         }
 
 # =========================
@@ -324,42 +154,19 @@ def get_stocks_data():
 def home():
     return render_template("home.html", data=get_home_data())
 
-@app.route("/top5")
-def top5():
-    return render_template("top5.html", data=get_top5_data())
-
-@app.route("/dma")
-def dma():
-    dma_data = get_dma_data()
-    live_data = get_live_data()
-
-    data = {**dma_data, **live_data}
-
-    return render_template("dma.html", data=data)
-    
-@app.route("/orderflow")
-def orderflow():
-    return render_template("orderflow.html", data=get_orderflow_data())
-    
 @app.route("/oi")
 def oi():
     return render_template("oi.html", data=get_oi_data())
 
-@app.route("/signal")
-def signal():
-    return render_template("signal.html")
-
-@app.route("/indices")
-def indices():
-    return render_template("indices.html", data=get_index_data())
-
-@app.route("/stocks")
-def stocks():
-    return render_template("stocks.html", data=get_stocks_data())
 @app.route("/intraday")
 def intraday():
     return render_template("intraday.html", data=get_intraday_data())
-    
+
+@app.route("/intraday-data")
+def intraday_data():
+    return jsonify(get_intraday_data())
+
+# 🔥 NEW CHAIN ROUTES
 @app.route("/chain")
 def chain():
     return render_template("chain.html", data=get_chain_data())
@@ -367,11 +174,6 @@ def chain():
 @app.route("/chain-data")
 def chain_data():
     return jsonify(get_chain_data())
-
-
-@app.route("/intraday-data")
-def intraday_data():
-    return jsonify(get_intraday_data())    
 
 # =========================
 # ▶️ RUN
