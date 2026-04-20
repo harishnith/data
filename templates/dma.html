@@ -1,60 +1,76 @@
 {% extends "base.html" %}
 {% block content %}
-
-<div class="top-header">
-    <h2>DMA Dashboard</h2>
-    <div class="fetch-time">⏱ {{ data.fetch_time }}</div>
+<div class="topbar">
+  <div class="tb-left">
+    <span class="tb-title">DMA Levels</span>
+    <span class="tb-sub">⏱ {{ data.fetch_time }}</span>
+  </div>
+  <div class="tb-right"><span class="tb-clock" id="clock"></span></div>
 </div>
 
-<!-- 🔥 MAIN 2 COLUMN LAYOUT -->
-<div class="dma-container">
+<style>
+.dma-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
+.dma-panel{background:var(--bg2);border:1px solid var(--border);border-radius:12px;overflow:hidden;transition:border-color .2s;}
+.dma-panel:hover{border-color:var(--border2);}
+.dma-ph{
+  padding:16px 22px;border-bottom:1px solid var(--border);background:var(--bg3);
+  display:flex;align-items:center;justify-content:space-between;
+}
+.dma-pname{font-family:var(--sans);font-size:.82rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--accent);}
+.dma-live{display:flex;align-items:center;gap:7px;font-size:.7rem;color:var(--text2);}
+.live-dot{width:7px;height:7px;border-radius:50%;background:var(--green);animation:pulse 1.4s ease-in-out infinite;}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(34,211,165,.5)}50%{box-shadow:0 0 0 5px rgba(34,211,165,0)}}
+.live-val{font-size:1.05rem;font-weight:700;color:var(--green);}
+.dma-row{
+  display:grid;grid-template-columns:1.8fr 1.2fr .8fr;align-items:center;
+  padding:13px 22px;border-bottom:1px solid var(--border);transition:background .15s;
+}
+.dma-row:last-child{border-bottom:none;}
+.dma-row:hover{background:rgba(255,255,255,.025);}
+.dma-lv{font-size:.68rem;color:var(--text2);letter-spacing:.04em;}
+.dma-vl{font-size:.84rem;font-weight:600;color:var(--text);}
+.dma-st{padding:3px 9px;border-radius:4px;font-size:.68rem;font-weight:700;letter-spacing:.06em;text-align:center;}
+.st-above{background:rgba(34,211,165,.12);color:var(--green);}
+.st-below{background:rgba(248,113,113,.1);color:var(--red);}
+</style>
 
-    <!-- ================= NIFTY ================= -->
-    <div class="dma-box">
+<div class="page">
+  <div class="dma-grid">
 
-        <div class="dma-title">NIFTY 50</div>
-
-        <!-- LIVE -->
+    <div class="dma-panel">
+      <div class="dma-ph">
+        <div class="dma-pname">Nifty 50</div>
         <div class="dma-live">
-            LIVE <span>{{ data.nifty_live }}</span>
+          <span class="live-dot"></span>LIVE
+          <span class="live-val">{{ data.nifty_live }}</span>
         </div>
-
-        <!-- LEVELS -->
-        {% for row in data.nifty %}
-        <div class="dma-row">
-            <span class="level">{{ row.level }}</span>
-            <span class="value">{{ row.value }}</span>
-            <span class="{% if row.status == 'Above' %}green{% else %}red{% endif %}">
-                {{ row.status }}
-            </span>
-        </div>
-        {% endfor %}
-
+      </div>
+      {% for row in data.nifty %}
+      <div class="dma-row">
+        <span class="dma-lv">{{ row.level }}</span>
+        <span class="dma-vl">{{ row.value }}</span>
+        <span class="dma-st {% if row.status == 'Above' %}st-above{% else %}st-below{% endif %}">{{ row.status }}</span>
+      </div>
+      {% endfor %}
     </div>
 
-    <!-- ================= BANK ================= -->
-    <div class="dma-box">
-
-        <div class="dma-title">BANKNIFTY</div>
-
-        <!-- LIVE -->
+    <div class="dma-panel">
+      <div class="dma-ph">
+        <div class="dma-pname">Bank Nifty</div>
         <div class="dma-live">
-            LIVE <span>{{ data.bank_live }}</span>
+          <span class="live-dot"></span>LIVE
+          <span class="live-val">{{ data.bank_live }}</span>
         </div>
-
-        <!-- LEVELS -->
-        {% for row in data.bank %}
-        <div class="dma-row">
-            <span class="level">{{ row.level }}</span>
-            <span class="value">{{ row.value }}</span>
-            <span class="{% if row.status == 'Above' %}green{% else %}red{% endif %}">
-                {{ row.status }}
-            </span>
-        </div>
-        {% endfor %}
-
+      </div>
+      {% for row in data.bank %}
+      <div class="dma-row">
+        <span class="dma-lv">{{ row.level }}</span>
+        <span class="dma-vl">{{ row.value }}</span>
+        <span class="dma-st {% if row.status == 'Above' %}st-above{% else %}st-below{% endif %}">{{ row.status }}</span>
+      </div>
+      {% endfor %}
     </div>
 
+  </div>
 </div>
-
 {% endblock %}
