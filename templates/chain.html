@@ -1,89 +1,68 @@
 {% extends "base.html" %}
 {% block content %}
-
-<div class="top-header">
-    <h2>Option Chain</h2>
+<div class="topbar">
+  <div class="tb-left">
+    <span class="tb-title">Max OI · Option Chain</span>
+    <span class="tb-sub">{{ data.fetch_date }} · {{ data.fetch_time }}</span>
+  </div>
+  <div class="tb-right"><span class="tb-clock" id="clock"></span></div>
 </div>
 
-<div class="chain-container">
-    <div class="card"><h3>Nifty</h3><div id="nifty-chain"></div></div>
-    <div class="card"><h3>BankNifty</h3><div id="bank-chain"></div></div>
-    <div class="card"><h3>Sensex</h3><div id="sensex-chain"></div></div>
+<style>
+.chain-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
+.chain-panel{background:var(--bg2);border:1px solid var(--border);border-radius:10px;overflow:hidden;}
+.chain-head{
+  padding:12px 16px;border-bottom:1px solid var(--border);background:var(--bg3);
+  font-family:var(--sans);font-size:.75rem;font-weight:800;letter-spacing:.06em;
+  text-transform:uppercase;color:var(--accent);
+}
+.chain-tbl{width:100%;border-collapse:collapse;font-size:.72rem;font-variant-numeric:tabular-nums;}
+.chain-tbl th{
+  padding:8px 10px;font-size:.58rem;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--muted);font-weight:600;border-bottom:1px solid var(--border);
+  background:rgba(0,0,0,.2);
+}
+.chain-tbl th.r{text-align:right;color:var(--red);}
+.chain-tbl th.l{text-align:left;color:var(--green);}
+.chain-tbl th.c{text-align:center;}
+.chain-tbl td{padding:7px 10px;border-bottom:1px solid rgba(99,179,237,0.05);}
+.chain-tbl tr:last-child td{border-bottom:none;}
+.chain-tbl tr:hover td{background:rgba(255,255,255,.025);}
+.td-call{text-align:right;color:var(--text2);}
+.td-strike{text-align:center;font-weight:700;color:var(--text);}
+.td-put{text-align:left;color:var(--text2);}
+.max-call{color:var(--red)!important;font-weight:700;background:rgba(248,113,113,.08)!important;}
+.max-put {color:var(--green)!important;font-weight:700;background:rgba(34,211,165,.08)!important;}
+.strike-atm{color:var(--accent)!important;background:rgba(56,189,248,.07)!important;}
+</style>
+
+<div class="page">
+  <div class="chain-grid">
+
+    {% for label, rows in [("Nifty 50", data.nifty), ("Bank Nifty", data.bank), ("Sensex", data.sensex)] %}
+    <div class="chain-panel">
+      <div class="chain-head">{{ label }}</div>
+      <table class="chain-tbl">
+        <thead>
+          <tr>
+            <th class="r">Call OI</th>
+            <th class="c">Strike</th>
+            <th class="l">Put OI</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in rows %}
+          <tr>
+            <td class="td-call {% if row.max_call %}max-call{% endif %}">{{ row.call }}</td>
+            <td class="td-strike">{{ row.strike }}</td>
+            <td class="td-put  {% if row.max_put  %}max-put{% endif %}">{{ row.put }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% endfor %}
+
+  </div>
 </div>
-
-<script>
-let prevData = {};
-
-function formatOI(val) {
-    if (val >= 1e6) return (val/1e6).toFixed(1)+"M";
-    if (val >= 1e3) return (val/1e3).toFixed(1)+"K";
-    return val;
-}
-
-function render(id, data) {
-
-    let calls = data.map(x => x.call);
-    let puts = data.map(x => x.put);
-
-    let topCalls = [...calls].sort((a,b)=>b-a).slice(0,2);
-    let topPuts = [...puts].sort((a,b)=>b-a).slice(0,2);
-
-    let cmpStrike = data[Math.floor(data.length/2)].strike;
-
-    let html = `
-    <div class="chain-row header">
-        <div>Call OI</div>
-        <div>Strike</div>
-        <div>Put OI</div>
-    </div>`;
-
-    data.forEach((row,i)=>{
-
-        let callClass="";
-        let putClass="";
-        let strikeClass="";
-
-        // 🔴 MAX + 🟠 SECOND CALL
-        if(row.call===topCalls[0]) callClass="max-call";
-        else if(row.call===topCalls[1]) callClass="second-call";
-
-        // 🟢 MAX + 🟡 SECOND PUT
-        if(row.put===topPuts[0]) putClass="max-put";
-        else if(row.put===topPuts[1]) putClass="second-put";
-
-        // 🔵 CMP ONLY
-        if(row.strike===cmpStrike) strikeClass="cmp";
-
-        // 🔥 BUILD-UP
-        if(prevData[id] && prevData[id][i]){
-            if(row.call > prevData[id][i].call) callClass+=" buildup";
-            if(row.put > prevData[id][i].put) putClass+=" buildup";
-        }
-
-        html += `
-        <div class="chain-row">
-            <div class="${callClass}">${formatOI(row.call)}</div>
-            <div class="${strikeClass}">${row.strike}</div>
-            <div class="${putClass}">${formatOI(row.put)}</div>
-        </div>`;
-    });
-
-    document.getElementById(id).innerHTML = html;
-    prevData[id]=data;
-}
-
-function loadChain(){
-    fetch('/chain-data')
-    .then(r=>r.json())
-    .then(d=>{
-        render("nifty-chain", d.nifty);
-        render("bank-chain", d.bank);
-        render("sensex-chain", d.sensex);
-    });
-}
-
-loadChain();
-setInterval(loadChain,180000);
-</script>
-
 {% endblock %}
