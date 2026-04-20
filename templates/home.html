@@ -1,30 +1,114 @@
 {% extends "base.html" %}
 {% block content %}
-
-<h2>Dashboard</h2>
-
-<div class="grid">
-
-<div class="card green">
-<h3>Trend</h3>
-<p>{{ data.trend }}</p>
+<div class="topbar">
+  <div class="tb-left">
+    <span class="tb-title">Dashboard</span>
+    <span class="tb-sub">{{ data.date }}</span>
+  </div>
+  <div class="tb-right">
+    <div class="status-pill {% if data.trend == 'Uptrend' %}pill-bull{% else %}pill-bear{% endif %}">
+      <span class="pill-dot"></span>{{ data.trend }}
+    </div>
+    <div class="mkt-badge">{{ data.sentiment }}</div>
+    <span class="tb-clock" id="clock"></span>
+  </div>
 </div>
 
-<div class="card blue">
-<h3>Sentiment</h3>
-<p>{{ data.sentiment }}</p>
-</div>
+<div class="page">
 
-<div class="card yellow">
-<h3>PCR</h3>
-<p>{{ data.pcr }}</p>
-</div>
+  <!-- MARKET OVERVIEW -->
+  <div>
+    <div class="slabel">Market Overview</div>
+    <div class="g4">
+      <div class="card">
+        <div class="card-accent {% if data.trend=='Uptrend' %}g{% else %}r{% endif %}"></div>
+        <div class="card-lbl">Trend</div>
+        <div class="card-val {% if data.trend=='Uptrend' %}val-g{% else %}val-r{% endif %}">{{ data.trend }}</div>
+        <div class="card-sub">Market direction</div>
+      </div>
+      <div class="card">
+        <div class="card-accent {% if data.sentiment=='Bullish' %}g{% else %}r{% endif %}"></div>
+        <div class="card-lbl">Sentiment</div>
+        <div class="card-val {% if data.sentiment=='Bullish' %}val-g{% else %}val-r{% endif %}">{{ data.sentiment }}</div>
+        <div class="card-sub">Overall bias</div>
+      </div>
+      <div class="card">
+        <div class="card-accent a"></div>
+        <div class="card-lbl">PCR Ratio</div>
+        <div class="card-val val-a">{{ data.pcr }}</div>
+        <div class="card-sub">Put-Call Ratio</div>
+      </div>
+      <div class="card">
+        <div class="card-accent r"></div>
+        <div class="card-lbl">India VIX</div>
+        <div class="card-val val-r">{{ data.vix }}</div>
+        <div class="card-sub">Volatility index</div>
+      </div>
+    </div>
+  </div>
 
-<div class="card red">
-<h3>India VIX</h3>
-<p>{{ data.vix }}</p>
-</div>
+  <!-- INDICES + OI -->
+  <div class="g2">
+    <div>
+      <div class="slabel">Index Overview</div>
+      <div class="tbl-wrap">
+        {% for row in [
+          ("Nifty 50",    data.nifty_price,      data.nifty_change),
+          ("Bank Nifty",  data.banknifty_price,   data.banknifty_change),
+          ("Sensex",      data.sensex_price,      data.sensex_change),
+        ] %}
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--border);">
+          <span style="font-size:.78rem;color:var(--text2);">{{ row[0] }}</span>
+          <div style="display:flex;align-items:center;gap:12px;">
+            <span style="font-size:1rem;font-weight:600;">{{ row[1] }}</span>
+            <span style="padding:3px 9px;border-radius:4px;font-size:.7rem;font-weight:700;
+              {% if row[2]|float > 0 %}background:rgba(34,211,165,.12);color:var(--green)
+              {% else %}background:rgba(248,113,113,.1);color:var(--red){% endif %}">
+              {% if row[2]|float > 0 %}▲{% else %}▼{% endif %} {{ row[2] }}%
+            </span>
+          </div>
+        </div>
+        {% endfor %}
+        <div style="padding:8px 18px;border-top:1px solid var(--border);">
+          <span class="ftime">⏱ {{ data.fetch_time }}</span>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="slabel">OI Build-up</div>
+      <div class="tbl-wrap" style="padding:8px 0;">
+        {% for row in data.oi %}
+        <div style="padding:9px 18px;border-bottom:1px solid var(--border);">
+          <div style="display:flex;justify-content:space-between;margin-bottom:5px;">
+            <span style="font-size:.7rem;color:var(--text2);">{{ row.strike }}</span>
+            <span style="font-size:.68rem;color:var(--muted);">{{ row.value }}%</span>
+          </div>
+          <div style="height:5px;background:var(--bg3);border-radius:3px;overflow:hidden;">
+            <div style="height:100%;width:{{ row.value }}%;border-radius:3px;
+              background:{% if row.type=='CE' %}var(--red){% else %}var(--green){% endif %};opacity:.7;"></div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <!-- KEY LEVELS -->
+  <div>
+    <div class="slabel">Key Levels</div>
+    <div class="g3">
+      <div class="card"><div class="card-accent b"></div>
+        <div class="card-lbl">Total OI</div><div class="card-val val-b">{{ data.total_oi }}</div>
+      </div>
+      <div class="card">
+        <div class="card-lbl">Max Pain</div><div class="card-val val-w">{{ data.max_pain }}</div>
+      </div>
+      <div class="card"><div class="card-accent a"></div>
+        <div class="card-lbl">PCR</div><div class="card-val val-a">{{ data.pcr }}</div>
+      </div>
+    </div>
+  </div>
 
 </div>
-
 {% endblock %}
