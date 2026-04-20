@@ -1,147 +1,93 @@
 {% extends "base.html" %}
 {% block content %}
-
-<div class="top-header">
-    <h2>Top 5 Dashboard</h2>
-    <div class="fetch-time">Last fetch⏱ {{ data.fetch_time }}</div>
+<div class="topbar">
+  <div class="tb-left">
+    <span class="tb-title">Top 5</span>
+    <span class="tb-sub">⏱ {{ data.fetch_time }}</span>
+  </div>
+  <div class="tb-right"><span class="tb-clock" id="clock"></span></div>
 </div>
 
-<!-- ================= NIFTY ================= -->
-<div class="section">
-    <h3>{{ data.nifty_title }}</h3>
+<style>
+.top5-section{margin-bottom:0;}
+.gl-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.gl-panel{background:var(--bg2);border:1px solid var(--border);border-radius:10px;overflow:hidden;}
+.gl-head{
+  padding:12px 18px;border-bottom:1px solid var(--border);background:var(--bg3);
+  font-family:var(--sans);font-size:.72rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;
+}
+.gl-head.gainer{color:var(--green);}
+.gl-head.loser {color:var(--red);}
+.gl-row{
+  display:grid;grid-template-columns:1.4fr 1fr .8fr .8fr;
+  padding:12px 18px;border-bottom:1px solid var(--border);
+  font-size:.76rem;align-items:center;transition:background .15s;
+}
+.gl-row:last-child{border-bottom:none;}
+.gl-row:hover{background:rgba(255,255,255,.025);}
+.gl-name{font-weight:700;color:var(--text);}
+.gl-cmp {color:var(--text2);}
+</style>
 
-    <div class="grid">
+<div class="page">
 
-        <!-- GAINERS -->
-        <div class="card">
-            <h4>🚀 Gainers</h4>
-
-            <table class="pro-table">
-                <thead>
-                    <tr>
-                        <th>#</th>
-                        <th>Stock</th>
-                        <th>CMP</th>
-                        <th>% Change</th>
-                        <th>Change</th>
-                    </tr>
-                </thead>
-
-                <tbody>
-                {% for row in data.nifty_data[1:] %}
-                <tr>
-                    <td class="rank">{{ loop.index }}</td>
-                    <td class="stock">{{ row[0] }}</td>
-                    <td>{{ row[1] }}</td>
-                    <td class="green">{{ row[2] }}%</td>
-                    <td class="green">{{ row[3] }}</td>
-                </tr>
-                {% endfor %}
-                </tbody>
-            </table>
+  <!-- NIFTY 50 -->
+  <div class="top5-section">
+    <div class="slabel">Nifty 50 — Top Movers</div>
+    <div class="gl-grid">
+      <div class="gl-panel">
+        <div class="gl-head gainer">▲ Gainers</div>
+        {% for s in data.nifty_gainers %}
+        <div class="gl-row">
+          <span class="gl-name">{{ s.name }}</span>
+          <span class="gl-cmp">{{ s.cmp }}</span>
+          <span class="g">+{{ s.pct }}%</span>
+          <span class="g">+{{ s.change }}</span>
         </div>
-
-        <!-- LOSERS -->
-        <div class="card">
-            <h4>🔻 Losers</h4>
-
-            <table class="pro-table">
-                <thead>
-                    <tr>
-                        <th>#</th>
-                        <th>Stock</th>
-                        <th>CMP</th>
-                        <th>% Change</th>
-                        <th>Change</th>
-                    </tr>
-                </thead>
-
-                <tbody>
-                {% for row in data.nifty_data[1:] %}
-                <tr>
-                    <td class="rank">{{ loop.index }}</td>
-                    <td class="stock">{{ row[4] }}</td>
-                    <td>{{ row[5] }}</td>
-                    <td class="red">{{ row[6] }}%</td>
-                    <td class="red">{{ row[7] }}</td>
-                </tr>
-                {% endfor %}
-                </tbody>
-            </table>
+        {% endfor %}
+      </div>
+      <div class="gl-panel">
+        <div class="gl-head loser">▼ Losers</div>
+        {% for s in data.nifty_losers %}
+        <div class="gl-row">
+          <span class="gl-name">{{ s.name }}</span>
+          <span class="gl-cmp">{{ s.cmp }}</span>
+          <span class="r">{{ s.pct }}%</span>
+          <span class="r">{{ s.change }}</span>
         </div>
-
+        {% endfor %}
+      </div>
     </div>
-</div>
+  </div>
 
-<!-- ================= BANKNIFTY ================= -->
-<div class="section">
-    <h3>{{ data.bank_title }}</h3>
-
-    <div class="grid">
-
-        <!-- GAINERS -->
-        <div class="card">
-            <h4>🚀 Gainers</h4>
-
-            {% if data.bank_data[1][0] %}
-            <table class="pro-table">
-                <thead>
-                    <tr>
-                        <th>#</th>
-                        <th>Stock</th>
-                        <th>CMP</th>
-                        <th>% Change</th>
-                        <th>Change</th>
-                    </tr>
-                </thead>
-
-                <tbody>
-                {% for row in data.bank_data[1:] %}
-                <tr>
-                    <td class="rank">{{ loop.index }}</td>
-                    <td class="stock">{{ row[0] }}</td>
-                    <td>{{ row[1] }}</td>
-                    <td class="green">{{ row[2] }}%</td>
-                    <td class="green">{{ row[3] }}</td>
-                </tr>
-                {% endfor %}
-                </tbody>
-            </table>
-            {% else %}
-            <p class="no-data">No Gainers Available</p>
-            {% endif %}
+  <!-- BANKNIFTY -->
+  <div class="top5-section">
+    <div class="slabel">Bank Nifty — Top Movers</div>
+    <div class="gl-grid">
+      <div class="gl-panel">
+        <div class="gl-head gainer">▲ Gainers</div>
+        {% for s in data.bank_gainers %}
+        <div class="gl-row">
+          <span class="gl-name">{{ s.name }}</span>
+          <span class="gl-cmp">{{ s.cmp }}</span>
+          <span class="g">+{{ s.pct }}%</span>
+          <span class="g">+{{ s.change }}</span>
         </div>
-
-        <!-- LOSERS -->
-        <div class="card">
-            <h4>🔻 Losers</h4>
-
-            <table class="pro-table">
-                <thead>
-                    <tr>
-                        <th>#</th>
-                        <th>Stock</th>
-                        <th>CMP</th>
-                        <th>% Change</th>
-                        <th>Change</th>
-                    </tr>
-                </thead>
-
-                <tbody>
-                {% for row in data.bank_data[1:] %}
-                <tr>
-                    <td class="rank">{{ loop.index }}</td>
-                    <td class="stock">{{ row[4] }}</td>
-                    <td>{{ row[5] }}</td>
-                    <td class="red">{{ row[6] }}%</td>
-                    <td class="red">{{ row[7] }}</td>
-                </tr>
-                {% endfor %}
-                </tbody>
-            </table>
+        {% endfor %}
+      </div>
+      <div class="gl-panel">
+        <div class="gl-head loser">▼ Losers</div>
+        {% for s in data.bank_losers %}
+        <div class="gl-row">
+          <span class="gl-name">{{ s.name }}</span>
+          <span class="gl-cmp">{{ s.cmp }}</span>
+          <span class="r">{{ s.pct }}%</span>
+          <span class="r">{{ s.change }}</span>
         </div>
-
+        {% endfor %}
+      </div>
     </div>
-</div>
+  </div>
 
+</div>
 {% endblock %}
