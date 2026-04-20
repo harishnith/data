@@ -1,65 +1,72 @@
 {% extends "base.html" %}
 {% block content %}
-
-<div class="top-header">
-    <h2>OI Dashboard</h2>
-    <div class="fetch-time">⏱ {{ data.fetch_time }}</div>
+<div class="topbar">
+  <div class="tb-left">
+    <span class="tb-title">OI Data</span>
+    <span class="tb-sub">⏱ {{ data.fetch_time }}</span>
+  </div>
+  <div class="tb-right"><span class="tb-clock" id="clock"></span></div>
 </div>
 
-<!-- ================= TABLE ================= -->
-<div class="section">
+<style>
+.chart-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.chart-card{background:var(--bg2);border:1px solid var(--border);border-radius:10px;overflow:hidden;}
+.chart-head{
+  padding:13px 18px;border-bottom:1px solid var(--border);
+  font-family:var(--sans);font-size:.72rem;font-weight:700;letter-spacing:.08em;
+  text-transform:uppercase;color:var(--accent);display:flex;align-items:center;gap:7px;
+}
+.chart-head::before{content:'';width:7px;height:7px;border-radius:2px;background:var(--accent);opacity:.6;}
+.chart-iframe{height:320px;}
+.chart-iframe iframe{width:100%;height:100%;border:none;display:block;
+  filter:invert(1) hue-rotate(180deg) saturate(.85) brightness(.85);}
+</style>
 
-    <div class="card">
-        <table class="pro-table">
+<div class="page">
 
-            <!-- HEADERS -->
-            <thead>
-                <tr>
-                    {% for col in data.oi_data[0] %}
-                    <th>{{ col }}</th>
-                    {% endfor %}
-                </tr>
-            </thead>
-
-            <!-- DATA -->
-            <tbody>
-                {% for row in data.oi_data[1:] %}
-                <tr>
-                    {% for cell in row %}
-                        {% if "Bullish" in cell %}
-                            <td class="green">{{ cell }}</td>
-                        {% elif "Bearish" in cell %}
-                            <td class="red">{{ cell }}</td>
-                        {% else %}
-                            <td>{{ cell }}</td>
-                        {% endif %}
-                    {% endfor %}
-                </tr>
-                {% endfor %}
-            </tbody>
-
-        </table>
+  <div>
+    <div class="slabel">OI Table</div>
+    <div class="tbl-wrap">
+      <table class="t">
+        <thead>
+          <tr>{% for h in data.headers %}<th>{{ h }}</th>{% endfor %}</tr>
+        </thead>
+        <tbody>
+          {% for row in data.rows %}
+          <tr>
+            {% for cell in row %}
+              {% if "Bullish" in cell %}
+                <td class="g">▲ {{ cell }}</td>
+              {% elif "Bearish" in cell %}
+                <td class="r">▼ {{ cell }}</td>
+              {% else %}
+                <td>{{ cell }}</td>
+              {% endif %}
+            {% endfor %}
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
     </div>
+  </div>
 
-</div>
-
-<!-- ================= CHARTS ================= -->
-<div class="chart-grid">
-
-    <div class="chart-card">
-        <h4>Nifty OI</h4>
-        <div class="iframe-wrapper">
-            <iframe src="https://docs.google.com/spreadsheets/d/e/2PACX-1vRlEuD4ZsZhGN3GG3ayTDaeHBUUyigKhkxTLHMJb6bVKCospEghBVGyfNHwJJx_bwD2eB_wQVU_-WSh/pubchart?oid=937344240&format=interactive"></iframe>
+  <div>
+    <div class="slabel">OI Charts</div>
+    <div class="chart-grid">
+      <div class="chart-card">
+        <div class="chart-head">Nifty OI vs Time</div>
+        <div class="chart-iframe">
+          <iframe src="https://docs.google.com/spreadsheets/d/e/2PACX-1vRlEuD4ZsZhGN3GG3ayTDaeHBUUyigKhkxTLHMJb6bVKCospEghBVGyfNHwJJx_bwD2eB_wQVU_-WSh/pubchart?oid=937344240&format=interactive"></iframe>
         </div>
-    </div>
-
-    <div class="chart-card">
-        <h4>CICO vs CIPO</h4>
-        <div class="iframe-wrapper">
-            <iframe src="https://docs.google.com/spreadsheets/d/e/2PACX-1vRlEuD4ZsZhGN3GG3ayTDaeHBUUyigKhkxTLHMJb6bVKCospEghBVGyfNHwJJx_bwD2eB_wQVU_-WSh/pubchart?oid=356673562&format=interactive"></iframe>
+      </div>
+      <div class="chart-card">
+        <div class="chart-head">CICO vs CIPO</div>
+        <div class="chart-iframe">
+          <iframe src="https://docs.google.com/spreadsheets/d/e/2PACX-1vRlEuD4ZsZhGN3GG3ayTDaeHBUUyigKhkxTLHMJb6bVKCospEghBVGyfNHwJJx_bwD2eB_wQVU_-WSh/pubchart?oid=356673562&format=interactive"></iframe>
         </div>
+      </div>
     </div>
+  </div>
 
 </div>
-
 {% endblock %}
