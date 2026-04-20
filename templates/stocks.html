@@ -1,31 +1,72 @@
 {% extends "base.html" %}
 {% block content %}
-
-<div class="top-header">
-    <h2>Stocks Dashboard</h2>
-    <div class="fetch-time">⏱ {{ data.fetch_time }}</div>
+<div class="topbar">
+  <div class="tb-left">
+    <span class="tb-title">Nifty 50 Stocks</span>
+    <span class="tb-sub">⏱ {{ data.fetch_time }}</span>
+  </div>
+  <div class="tb-right"><span class="tb-clock" id="clock"></span></div>
 </div>
 
-<div class="index-grid">
+<style>
+.filter-row{display:flex;gap:8px;margin-bottom:4px;}
+.f-btn{
+  padding:5px 14px;border-radius:999px;font-size:.68rem;font-weight:600;
+  border:1px solid var(--border);background:transparent;color:var(--text2);
+  cursor:pointer;transition:all .15s;font-family:var(--mono);
+}
+.f-btn:hover,.f-btn.active{background:rgba(56,189,248,.12);border-color:rgba(56,189,248,.3);color:var(--accent);}
+.rank-num{color:var(--muted);font-size:.68rem;width:24px;}
+</style>
 
-    {% for stock in data.stocks %}
-    <div class="index-card {% if stock.percent > 0 %}green-card{% else %}red-card{% endif %}">
+<div class="page">
 
-        <div class="index-name">{{ stock.name }}</div>
+  <div class="filter-row">
+    <button class="f-btn active" onclick="filterStocks('all',this)">All</button>
+    <button class="f-btn" onclick="filterStocks('gain',this)">Gainers</button>
+    <button class="f-btn" onclick="filterStocks('loss',this)">Losers</button>
+  </div>
 
-        <div class="index-value">{{ stock.cmp }}</div>
-
-        <div class="index-change">
-            {{ stock.change }}
-        </div>
-
-        <div class="index-percent">
-            {{ stock.percent }}%
-        </div>
-
-    </div>
-    {% endfor %}
-
+  <div class="tbl-wrap">
+    <table class="t" id="stocksTable">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Stock</th>
+          <th>CMP</th>
+          <th>% Change</th>
+          <th>Change</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for s in data.stocks %}
+        <tr data-pct="{{ s.pct }}">
+          <td class="rank-num">{{ loop.index }}</td>
+          <td class="bold">{{ s.name }}</td>
+          <td>{{ s.cmp }}</td>
+          <td class="{% if s.pct > 0 %}g{% elif s.pct < 0 %}r{% endif %}">
+            {% if s.pct > 0 %}▲ +{% elif s.pct < 0 %}▼ {% endif %}{{ s.pct }}%
+          </td>
+          <td class="{% if s.change > 0 %}g{% elif s.change < 0 %}r{% endif %}">
+            {% if s.change > 0 %}+{% endif %}{{ s.change }}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
 </div>
 
+<script>
+function filterStocks(type, btn) {
+  document.querySelectorAll('.f-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('#stocksTable tbody tr').forEach(tr=>{
+    const pct = parseFloat(tr.dataset.pct||0);
+    if(type==='gain') tr.style.display = pct>0?'':'none';
+    else if(type==='loss') tr.style.display = pct<0?'':'none';
+    else tr.style.display='';
+  });
+}
+</script>
 {% endblock %}
