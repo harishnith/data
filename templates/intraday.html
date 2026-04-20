@@ -1,142 +1,61 @@
 {% extends "base.html" %}
 {% block content %}
-
-<div class="top-header">
-    <h2>Intraday Dashboard</h2>
+<div class="topbar">
+  <div class="tb-left">
+    <span class="tb-title">Intraday Dashboard</span>
+    <span class="tb-sub">{{ data.date }} · {{ data.time }}</span>
+  </div>
+  <div class="tb-right"><span class="tb-clock" id="clock"></span></div>
 </div>
 
-<div class="intraday-container">
-    <div class="left-panel"></div>
+<style>
+.intra-block{
+  background:var(--bg2);border:1px solid var(--border);border-radius:12px;overflow:hidden;
+  transition:border-color .2s;
+}
+.intra-block:hover{border-color:var(--border2);}
+.intra-head{
+  padding:16px 22px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+  background:var(--bg3);
+}
+.intra-name{font-family:var(--sans);font-size:.9rem;font-weight:800;color:var(--accent);}
+.intra-ltp {font-size:1.7rem;font-weight:700;color:var(--green);}
+.ohlc-grid {display:grid;grid-template-columns:repeat(4,1fr);}
+.ohlc-cell {padding:16px 22px;border-right:1px solid var(--border);}
+.ohlc-cell:last-child{border-right:none;}
+.ohlc-lbl  {font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;}
+.ohlc-val  {font-size:1rem;font-weight:600;color:var(--text);}
+</style>
 
-    <div class="right-panel">
+<div class="page">
+  <div class="slabel">Live Market Data</div>
 
-        <!-- NIFTY -->
-        <div class="card intraday-box">
-            <h3>Nifty 50</h3>
-
-            <div class="grid-row header">
-                <div>LTP</div>
-                <div>Open</div>
-                <div>High</div>
-                <div>Low</div>
-                <div>Close</div>
-            </div>
-
-            <div class="grid-row values">
-                <div id="nifty-ltp" class="ltp">{{ data.nifty.ltp }}</div>
-                <div id="nifty-open">{{ data.nifty.open }}</div>
-                <div id="nifty-high">{{ data.nifty.high }}</div>
-                <div id="nifty-low">{{ data.nifty.low }}</div>
-                <div id="nifty-close">{{ data.nifty.close }}</div>
-            </div>
-        </div>
-
-        <!-- BANKNIFTY -->
-        <div class="card intraday-box">
-            <h3>BankNifty</h3>
-
-            <div class="grid-row header">
-                <div>LTP</div>
-                <div>Open</div>
-                <div>High</div>
-                <div>Low</div>
-                <div>Close</div>
-            </div>
-
-            <div class="grid-row values">
-                <div id="bank-ltp" class="ltp">{{ data.bank.ltp }}</div>
-                <div id="bank-open">{{ data.bank.open }}</div>
-                <div id="bank-high">{{ data.bank.high }}</div>
-                <div id="bank-low">{{ data.bank.low }}</div>
-                <div id="bank-close">{{ data.bank.close }}</div>
-            </div>
-        </div>
-
-        <!-- SENSEX -->
-        <div class="card intraday-box">
-            <h3>Sensex</h3>
-
-            <div class="grid-row header">
-                <div>LTP</div>
-                <div>Open</div>
-                <div>High</div>
-                <div>Low</div>
-                <div>Close</div>
-            </div>
-
-            <div class="grid-row values">
-                <div id="sensex-ltp" class="ltp">{{ data.sensex.ltp }}</div>
-                <div id="sensex-open">{{ data.sensex.open }}</div>
-                <div id="sensex-high">{{ data.sensex.high }}</div>
-                <div id="sensex-low">{{ data.sensex.low }}</div>
-                <div id="sensex-close">{{ data.sensex.close }}</div>
-            </div>
-        </div>
-
+  {% for item in [data.nifty, data.bank, data.sensex] %}
+  <div class="intra-block">
+    <div class="intra-head">
+      <div class="intra-name">{{ item.name }}</div>
+      <div class="intra-ltp">{{ item.ltp }}</div>
     </div>
+    <div class="ohlc-grid">
+      <div class="ohlc-cell">
+        <div class="ohlc-lbl">Open</div>
+        <div class="ohlc-val">{{ item.open }}</div>
+      </div>
+      <div class="ohlc-cell">
+        <div class="ohlc-lbl">High</div>
+        <div class="ohlc-val" style="color:var(--green)">{{ item.high }}</div>
+      </div>
+      <div class="ohlc-cell">
+        <div class="ohlc-lbl">Low</div>
+        <div class="ohlc-val" style="color:var(--red)">{{ item.low }}</div>
+      </div>
+      <div class="ohlc-cell">
+        <div class="ohlc-lbl">Close</div>
+        <div class="ohlc-val" style="color:var(--amber)">{{ item.close }}</div>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
 </div>
-
-<script>
-let prev = {
-    nifty: parseFloat("{{ data.nifty.ltp }}") || 0,
-    bank: parseFloat("{{ data.bank.ltp }}") || 0,
-    sensex: parseFloat("{{ data.sensex.ltp }}") || 0
-};
-
-function updateLTP(id, newVal, key) {
-    const el = document.getElementById(id);
-
-    if (!el) return;
-
-    // remove old
-    el.classList.remove("green-blink", "red-blink");
-
-    if (newVal > prev[key]) {
-        el.classList.add("green-blink");
-    } else if (newVal < prev[key]) {
-        el.classList.add("red-blink");
-    }
-
-    el.innerText = newVal;
-    prev[key] = newVal;
-}
-
-function setText(id, val) {
-    const el = document.getElementById(id);
-    if (el) el.innerText = val;
-}
-
-function loadIntraday() {
-    fetch('/intraday-data')
-    .then(res => res.json())
-    .then(d => {
-
-        updateLTP("nifty-ltp", d.nifty.ltp, "nifty");
-        updateLTP("bank-ltp", d.bank.ltp, "bank");
-        updateLTP("sensex-ltp", d.sensex.ltp, "sensex");
-
-        setText("nifty-open", d.nifty.open);
-        setText("nifty-high", d.nifty.high);
-        setText("nifty-low", d.nifty.low);
-        setText("nifty-close", d.nifty.close);
-
-        setText("bank-open", d.bank.open);
-        setText("bank-high", d.bank.high);
-        setText("bank-low", d.bank.low);
-        setText("bank-close", d.bank.close);
-
-        setText("sensex-open", d.sensex.open);
-        setText("sensex-high", d.sensex.high);
-        setText("sensex-low", d.sensex.low);
-        setText("sensex-close", d.sensex.close);
-
-    });
-}
-
-// initial + loop
-loadIntraday();
-setInterval(loadIntraday, 3000); // fast refresh
-
-</script>
-
 {% endblock %}
