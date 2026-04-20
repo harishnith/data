@@ -1,47 +1,116 @@
 {% extends "base.html" %}
 {% block content %}
+
 <div class="topbar">
   <div class="tb-left">
     <span class="tb-title">Max OI · Option Chain</span>
     <span class="tb-sub">{{ data.fetch_date }} · {{ data.fetch_time }}</span>
   </div>
-  <div class="tb-right"><span class="tb-clock" id="clock"></span></div>
+  <div class="tb-right">
+    <span class="tb-clock" id="clock"></span>
+  </div>
 </div>
 
 <style>
-.chain-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
-.chain-panel{background:var(--bg2);border:1px solid var(--border);border-radius:10px;overflow:hidden;}
-.chain-head{
-  padding:12px 16px;border-bottom:1px solid var(--border);background:var(--bg3);
-  font-family:var(--sans);font-size:.75rem;font-weight:800;letter-spacing:.06em;
-  text-transform:uppercase;color:var(--accent);
+.chain-grid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:16px;
 }
-.chain-tbl{width:100%;border-collapse:collapse;font-size:.72rem;font-variant-numeric:tabular-nums;}
+
+.chain-panel{
+  background:var(--bg2);
+  border:1px solid var(--border);
+  border-radius:10px;
+  overflow:hidden;
+}
+
+.chain-head{
+  padding:12px 16px;
+  border-bottom:1px solid var(--border);
+  background:var(--bg3);
+  font-size:.75rem;
+  font-weight:800;
+  letter-spacing:.06em;
+  text-transform:uppercase;
+  color:var(--accent);
+}
+
+.chain-tbl{
+  width:100%;
+  border-collapse:collapse;
+  font-size:.72rem;
+  font-variant-numeric:tabular-nums;
+}
+
 .chain-tbl th{
-  padding:8px 10px;font-size:.58rem;letter-spacing:.1em;text-transform:uppercase;
-  color:var(--muted);font-weight:600;border-bottom:1px solid var(--border);
+  padding:8px 10px;
+  font-size:.58rem;
+  text-transform:uppercase;
+  color:var(--muted);
+  border-bottom:1px solid var(--border);
   background:rgba(0,0,0,.2);
 }
+
 .chain-tbl th.r{text-align:right;color:var(--red);}
 .chain-tbl th.l{text-align:left;color:var(--green);}
 .chain-tbl th.c{text-align:center;}
-.chain-tbl td{padding:7px 10px;border-bottom:1px solid rgba(99,179,237,0.05);}
+
+.chain-tbl td{
+  padding:7px 10px;
+  border-bottom:1px solid rgba(99,179,237,0.05);
+}
+
 .chain-tbl tr:last-child td{border-bottom:none;}
-.chain-tbl tr:hover td{background:rgba(255,255,255,.025);}
+
+.chain-tbl tr:hover td{
+  background:rgba(255,255,255,.025);
+}
+
+/* alignment */
 .td-call{text-align:right;color:var(--text2);}
 .td-strike{text-align:center;font-weight:700;color:var(--text);}
 .td-put{text-align:left;color:var(--text2);}
-.max-call{color:var(--red)!important;font-weight:700;background:rgba(248,113,113,.08)!important;}
-.max-put {color:var(--green)!important;font-weight:700;background:rgba(34,211,165,.08)!important;}
-.strike-atm{color:var(--accent)!important;background:rgba(56,189,248,.07)!important;}
+
+/* 🔴 Max Call */
+.max-call{
+  color:var(--red)!important;
+  font-weight:800;
+  background:rgba(248,113,113,0.12)!important;
+}
+
+/* 🟢 Max Put */
+.max-put{
+  color:var(--green)!important;
+  font-weight:800;
+  background:rgba(34,211,165,0.12)!important;
+}
+
+/* 🔵 CMP (Row 11) */
+.cmp-row td{
+  background:rgba(59,130,246,0.25)!important;
+  color:#60a5fa!important;
+  font-weight:900;
+  border-top:1px solid #3b82f6;
+  border-bottom:1px solid #3b82f6;
+}
+
+/* 🟡 Max Pain */
+.strike-maxpain{
+  background:rgba(250,204,21,0.18)!important;
+  color:#facc15!important;
+  font-weight:900;
+}
 </style>
 
 <div class="page">
   <div class="chain-grid">
 
     {% for label, rows in [("Nifty 50", data.nifty), ("Bank Nifty", data.bank), ("Sensex", data.sensex)] %}
+
     <div class="chain-panel">
       <div class="chain-head">{{ label }}</div>
+
       <table class="chain-tbl">
         <thead>
           <tr>
@@ -50,19 +119,44 @@
             <th class="l">Put OI</th>
           </tr>
         </thead>
+
         <tbody>
           {% for row in rows %}
-          <tr>
-            <td class="td-call {% if row.max_call %}max-call{% endif %}">{{ row.call }}</td>
-            <td class="td-strike">{{ row.strike }}</td>
-            <td class="td-put  {% if row.max_put  %}max-put{% endif %}">{{ row.put }}</td>
+          <tr class="{% if loop.index0 == 10 %}cmp-row{% endif %}">
+
+            <!-- CALL -->
+            <td class="td-call {% if row.max_call %}max-call{% endif %}">
+              {{ row.call }}
+            </td>
+
+            <!-- STRIKE -->
+            <td class="td-strike {% if row.max_pain %}strike-maxpain{% endif %}">
+              {{ row.strike }}
+            </td>
+
+            <!-- PUT -->
+            <td class="td-put {% if row.max_put %}max-put{% endif %}">
+              {{ row.put }}
+            </td>
+
           </tr>
           {% endfor %}
         </tbody>
       </table>
+
     </div>
+
     {% endfor %}
 
   </div>
 </div>
+
+<script>
+/* ⏱️ Clock */
+setInterval(() => {
+  document.getElementById("clock").innerText =
+    new Date().toLocaleTimeString();
+}, 1000);
+</script>
+
 {% endblock %}
