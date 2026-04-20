@@ -1,77 +1,108 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="top-header">
-    <h2>Order Flow Dashboard</h2>
-    <div class="fetch-time">⏱ {{ data.fetch_time }}</div>
+<div class="topbar">
+  <div class="tb-left">
+    <span class="tb-title">Order Flow</span>
+  </div>
+  <div class="tb-right"><span class="tb-clock" id="clock"></span></div>
 </div>
 
-<div class="orderflow-grid">
+<style>
+.of-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
+.of-panel{background:var(--bg2);border:1px solid var(--border);border-radius:10px;overflow:hidden;}
+.of-head{
+  padding:13px 18px;border-bottom:1px solid var(--border);background:var(--bg3);
+  font-family:var(--sans);font-size:.78rem;font-weight:800;letter-spacing:.06em;
+  text-transform:uppercase;color:var(--accent);
+}
+.of-tbl{width:100%;border-collapse:collapse;font-size:.72rem;font-variant-numeric:tabular-nums;}
+.of-tbl th{
+  padding:9px 12px;font-size:.58rem;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--muted);font-weight:600;border-bottom:1px solid var(--border);
+  background:rgba(0,0,0,.15);text-align:right;
+}
+.of-tbl th:first-child,.of-tbl th:nth-child(2){text-align:left;}
+.of-tbl td{padding:10px 12px;border-bottom:1px solid rgba(99,179,237,.05);text-align:right;color:var(--text2);}
+.of-tbl td:first-child,.of-tbl td:nth-child(2){text-align:left;color:var(--text);}
+.of-tbl tr:last-child td{border-bottom:none;}
+.of-tbl tr:hover td{background:rgba(255,255,255,.025);}
+.bias-bull{color:var(--green);font-weight:700;}
+.bias-bear{color:var(--red);font-weight:700;}
+.delta-pos{color:var(--green);}
+.delta-neg{color:var(--red);}
+</style>
 
-    <!-- ================= NIFTY ================= -->
-    <div class="card">
+<div class="page">
+  <div class="of-grid">
 
-        <h3>NIFTY 50</h3>
-
-        <table class="pro-table">
-            <thead>
-                <tr>
-                    {% for col in data.nifty_data[0] %}
-                    <th>{{ col }}</th>
-                    {% endfor %}
-                </tr>
-            </thead>
-
-            <tbody>
-                {% for row in data.nifty_data[1:] %}
-                <tr>
-                    {% for cell in row %}
-                        {% if cell|string|replace(',', '')|float > 0 %}
-                            <td class="green">{{ cell }}</td>
-                        {% elif cell|string|replace(',', '')|float < 0 %}
-                            <td class="red">{{ cell }}</td>
-                        {% else %}
-                            <td>{{ cell }}</td>
-                        {% endif %}
-                    {% endfor %}
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-
+    <div class="of-panel">
+      <div class="of-head">Nifty Order Flow</div>
+      <table class="of-tbl">
+        <thead>
+          <tr>
+            <th>Time</th>
+            <th>Spot</th>
+            <th>Volume</th>
+            <th>Buyers</th>
+            <th>Sellers</th>
+            <th>Delta</th>
+            <th>Bias</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in data.nifty %}
+          <tr>
+            <td>{{ row.time }}</td>
+            <td>{{ row.spot }}</td>
+            <td>{{ row.volume }}</td>
+            <td style="color:var(--green)">{{ row.buyers }}</td>
+            <td style="color:var(--red)">{{ row.sellers }}</td>
+            <td class="{% if row.delta > 0 %}delta-pos{% else %}delta-neg{% endif %}">
+              {% if row.delta > 0 %}+{% endif %}{{ row.delta_fmt }}
+            </td>
+            <td class="{% if row.bias=='Bull' %}bias-bull{% else %}bias-bear{% endif %}">
+              {% if row.bias=='Bull' %}▲{% else %}▼{% endif %} {{ row.bias }}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
     </div>
 
-    <!-- ================= BANKNIFTY ================= -->
-    <div class="card">
-
-        <h3>BANKNIFTY</h3>
-
-        <table class="pro-table">
-            <thead>
-                <tr>
-                    {% for col in data.bank_data[0] %}
-                    <th>{{ col }}</th>
-                    {% endfor %}
-                </tr>
-            </thead>
-
-            <tbody>
-                {% for row in data.bank_data[1:] %}
-                <tr>
-                    {% for cell in row %}
-                        {% if cell|string|replace(',', '')|float > 0 %}
-                            <td class="green">{{ cell }}</td>
-                        {% elif cell|string|replace(',', '')|float < 0 %}
-                            <td class="red">{{ cell }}</td>
-                        {% else %}
-                            <td>{{ cell }}</td>
-                        {% endif %}
-                    {% endfor %}
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-
+    <div class="of-panel">
+      <div class="of-head">Bank Nifty Order Flow</div>
+      <table class="of-tbl">
+        <thead>
+          <tr>
+            <th>Time</th>
+            <th>Spot</th>
+            <th>Volume</th>
+            <th>Buyers</th>
+            <th>Sellers</th>
+            <th>Delta</th>
+            <th>Bias</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in data.bank %}
+          <tr>
+            <td>{{ row.time }}</td>
+            <td>{{ row.spot }}</td>
+            <td>{{ row.volume }}</td>
+            <td style="color:var(--green)">{{ row.buyers }}</td>
+            <td style="color:var(--red)">{{ row.sellers }}</td>
+            <td class="{% if row.delta > 0 %}delta-pos{% else %}delta-neg{% endif %}">
+              {% if row.delta > 0 %}+{% endif %}{{ row.delta_fmt }}
+            </td>
+            <td class="{% if row.bias=='Bull' %}bias-bull{% else %}bias-bear{% endif %}">
+              {% if row.bias=='Bull' %}▲{% else %}▼{% endif %} {{ row.bias }}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
     </div>
 
+  </div>
 </div>
 {% endblock %}
