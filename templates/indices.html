@@ -1,38 +1,74 @@
 {% extends "base.html" %}
 {% block content %}
-
-<div class="top-header">
-    <h2>Indices Dashboard</h2>
-    <div class="fetch-time">⏱ {{ data.fetch_time }}</div>
+<div class="topbar">
+  <div class="tb-left">
+    <span class="tb-title">Indices</span>
+    <span class="tb-sub">⏱ {{ data.fetch_time }}</span>
+  </div>
+  <div class="tb-right"><span class="tb-clock" id="clock"></span></div>
 </div>
 
-<div class="section">
+<style>
+.idx-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;}
+.idx-card{
+  background:var(--bg2);border:1px solid var(--border);border-radius:10px;
+  padding:18px 20px;position:relative;overflow:hidden;
+  transition:transform .18s,border-color .18s;
+}
+.idx-card:hover{transform:translateY(-2px);border-color:var(--border2);}
+.idx-card::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;}
+.idx-card.up::after{background:linear-gradient(90deg,transparent,var(--green),transparent);}
+.idx-card.dn::after{background:linear-gradient(90deg,transparent,var(--red),transparent);}
+.idx-label{font-size:.62rem;color:var(--text2);letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px;}
+.idx-price{font-size:1.45rem;font-weight:700;color:var(--text);}
+.idx-row2 {display:flex;align-items:center;gap:8px;margin-top:8px;}
+.idx-chg  {font-size:.78rem;font-weight:600;}
+.idx-pct  {padding:2px 8px;border-radius:4px;font-size:.7rem;font-weight:700;}
+.up-bg{background:rgba(34,211,165,.12);color:var(--green);}
+.dn-bg{background:rgba(248,113,113,.1);color:var(--red);}
+.up-c{color:var(--green)}.dn-c{color:var(--red)}
+</style>
 
-    <div class="index-grid">
+<div class="page">
 
-        {% for row in data.index_data %}
-
-        <div class="index-card 
-            {% if row[3]|float > 0 %}green-card{% else %}red-card{% endif %}">
-
-            <div class="index-name">{{ row[0] }}</div>
-
-            <div class="index-value">{{ row[1] }}</div>
-
-            <div class="index-change">
-                {{ row[2] }}
-            </div>
-
-            <div class="index-percent">
-                {{ row[3] }}%
-            </div>
-
+  <div>
+    <div class="slabel">Sectoral Indices</div>
+    <div class="idx-cards">
+      {% for row in data.indices %}
+      <div class="idx-card {% if row.pct > 0 %}up{% else %}dn{% endif %}">
+        <div class="idx-label">{{ row.name }}</div>
+        <div class="idx-price">{{ row.cmp }}</div>
+        <div class="idx-row2">
+          <span class="idx-chg {% if row.change > 0 %}up-c{% else %}dn-c{% endif %}">
+            {% if row.change > 0 %}+{% endif %}{{ row.change }}
+          </span>
+          <span class="idx-pct {% if row.pct > 0 %}up-bg{% else %}dn-bg{% endif %}">
+            {% if row.pct > 0 %}▲{% else %}▼{% endif %} {{ row.pct|abs }}%
+          </span>
         </div>
-
-        {% endfor %}
-
+      </div>
+      {% endfor %}
     </div>
+  </div>
+
+  <div>
+    <div class="slabel">Top Nifty Stocks <span class="ftime" style="margin-left:8px;">⏱ {{ data.fetch_time2 }}</span></div>
+    <div class="tbl-wrap">
+      <table class="t">
+        <thead><tr><th>Stock</th><th>CMP</th><th>% Change</th><th>Change</th></tr></thead>
+        <tbody>
+          {% for s in data.stocks %}
+          <tr>
+            <td class="bold">{{ s.name }}</td>
+            <td>{{ s.cmp }}</td>
+            <td class="{% if s.pct > 0 %}g{% else %}r{% endif %}">{% if s.pct > 0 %}+{% endif %}{{ s.pct }}%</td>
+            <td class="{% if s.change > 0 %}g{% else %}r{% endif %}">{% if s.change > 0 %}+{% endif %}{{ s.change }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
 
 </div>
-
 {% endblock %}
