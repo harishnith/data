@@ -1,91 +1,212 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Algo Terminal</title>
-    <link rel="stylesheet" href="/static/style.css">
-</head>
-<script>
-    // Auto refresh every 2 minutes
-    setInterval(function () {
-        window.location.reload();
-    }, 120000);
-
-    // Live clock
-    function updateClock() {
-        const now = new Date();
-        document.getElementById("clock").innerText =
-            now.toLocaleString();
-    }
-
-    setInterval(updateClock, 1000);
-    updateClock();
-</script>
-<script>
-let previousValues = {};
-
-function updateDMA() {
-    document.querySelectorAll(".dma-value").forEach((el, index) => {
-
-        let current = parseFloat(el.innerText);
-
-        if (previousValues[index] !== undefined) {
-
-            if (current > previousValues[index]) {
-                el.classList.remove("blink-red");
-                el.classList.add("blink-green");
-            }
-            else if (current < previousValues[index]) {
-                el.classList.remove("blink-green");
-                el.classList.add("blink-red");
-            }
-        }
-
-        previousValues[index] = current;
-    });
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Algo Terminal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#070b12;--bg2:#0c1220;--bg3:#111827;
+  --border:rgba(99,179,237,0.1);--border2:rgba(99,179,237,0.2);
+  --accent:#38bdf8;--green:#22d3a5;--red:#f87171;--amber:#fbbf24;--blue:#60a5fa;
+  --muted:#475569;--text:#e2e8f0;--text2:#94a3b8;
+  --sidebar:200px;
+  --mono:'JetBrains Mono',monospace;--sans:'Syne',sans-serif;
 }
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--mono);}
 
-// check every 2 sec
-setInterval(updateDMA, 2000);
-</script>
+/* ── SIDEBAR ── */
+.sidebar{
+  position:fixed;top:0;left:0;width:var(--sidebar);height:100vh;
+  background:var(--bg2);border-right:1px solid var(--border);
+  display:flex;flex-direction:column;z-index:100;
+  overflow-y:auto;
+}
+.sb-logo{
+  padding:20px 16px 16px;
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:10px;
+}
+.sb-logo-icon{
+  width:32px;height:32px;border-radius:8px;
+  background:linear-gradient(135deg,var(--accent),var(--blue));
+  display:flex;align-items:center;justify-content:center;
+  font-size:.85rem;font-weight:800;color:#fff;font-family:var(--sans);
+}
+.sb-logo-text{font-family:var(--sans);font-size:.88rem;font-weight:700;color:var(--text);}
+.sb-logo-ver{font-size:.6rem;color:var(--muted);}
+
+.sb-section{padding:16px 12px 4px;font-size:.58rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:700;}
+
+.sb-link{
+  display:flex;align-items:center;gap:9px;
+  padding:9px 14px;margin:1px 8px;
+  border-radius:7px;
+  font-size:.72rem;color:var(--text2);text-decoration:none;
+  transition:background .15s,color .15s;
+  cursor:pointer;
+}
+.sb-link:hover{background:rgba(255,255,255,.05);color:var(--text);}
+.sb-link.active{background:rgba(56,189,248,.12);color:var(--accent);border:1px solid rgba(56,189,248,.2);}
+.sb-link svg{width:14px;height:14px;flex-shrink:0;opacity:.7;}
+.sb-link.active svg{opacity:1;}
+
+/* ── MAIN ── */
+.main{margin-left:var(--sidebar);min-height:100vh;}
+
+/* ── TOP BAR ── */
+.topbar{
+  position:sticky;top:0;z-index:50;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:14px 28px;
+  background:rgba(7,11,18,.9);
+  border-bottom:1px solid var(--border);
+  backdrop-filter:blur(12px);
+}
+.tb-left{display:flex;align-items:baseline;gap:12px;}
+.tb-title{font-family:var(--sans);font-size:1.1rem;font-weight:800;color:var(--text);}
+.tb-sub  {font-size:.68rem;color:var(--muted);}
+.tb-right{display:flex;align-items:center;gap:12px;}
+
+.status-pill{
+  display:flex;align-items:center;gap:6px;
+  padding:5px 12px;border-radius:999px;font-size:.68rem;font-weight:700;
+  letter-spacing:.05em;text-transform:uppercase;
+}
+.pill-bull{background:rgba(34,211,165,.1);border:1px solid rgba(34,211,165,.25);color:var(--green);}
+.pill-bear{background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.25);color:var(--red);}
+.pill-dot{width:6px;height:6px;border-radius:50%;background:currentColor;animation:blink 1.4s ease-in-out infinite;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.25}}
+
+.mkt-badge{
+  padding:5px 12px;border-radius:999px;font-size:.68rem;font-weight:600;
+  background:rgba(255,255,255,.04);border:1px solid var(--border);color:var(--text2);
+}
+.tb-clock{font-size:.78rem;color:var(--text2);font-variant-numeric:tabular-nums;}
+
+/* ── PAGE BODY ── */
+.page{padding:24px 28px;display:flex;flex-direction:column;gap:24px;}
+
+/* ── SECTION LABEL ── */
+.slabel{
+  font-family:var(--sans);font-size:.6rem;font-weight:700;
+  letter-spacing:.15em;text-transform:uppercase;color:var(--muted);
+  margin-bottom:12px;display:flex;align-items:center;gap:8px;
+}
+.slabel::after{content:'';flex:1;height:1px;background:var(--border);}
+
+/* ── CARDS ── */
+.card{
+  background:var(--bg2);border:1px solid var(--border);
+  border-radius:10px;padding:18px 20px;position:relative;overflow:hidden;
+  transition:border-color .2s,transform .18s;
+}
+.card:hover{border-color:var(--border2);transform:translateY(-2px);}
+.card-accent{position:absolute;top:0;left:0;right:0;height:2px;}
+.card-accent.g{background:linear-gradient(90deg,transparent,var(--green),transparent);}
+.card-accent.r{background:linear-gradient(90deg,transparent,var(--red),transparent);}
+.card-accent.a{background:linear-gradient(90deg,transparent,var(--amber),transparent);}
+.card-accent.b{background:linear-gradient(90deg,transparent,var(--blue),transparent);}
+.card-lbl{font-size:.62rem;color:var(--text2);letter-spacing:.1em;text-transform:uppercase;margin-bottom:8px;}
+.card-val{font-size:1.6rem;font-weight:700;line-height:1;}
+.card-sub{font-size:.65rem;color:var(--muted);margin-top:6px;}
+.val-g{color:var(--green)}.val-r{color:var(--red)}.val-a{color:var(--amber)}.val-b{color:var(--blue)}.val-w{color:var(--text)}
+
+/* ── GRIDS ── */
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
+
+/* ── TABLE ── */
+.tbl-wrap{background:var(--bg2);border:1px solid var(--border);border-radius:10px;overflow:hidden;}
+table.t{width:100%;border-collapse:collapse;font-size:.76rem;}
+table.t thead tr{background:var(--bg3);border-bottom:1px solid var(--border);}
+table.t th{padding:11px 16px;text-align:left;font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:600;}
+table.t td{padding:12px 16px;border-bottom:1px solid var(--border);color:var(--text);}
+table.t tbody tr:last-child td{border-bottom:none;}
+table.t tbody tr:hover td{background:rgba(255,255,255,.02);}
+table.t td.g{color:var(--green);font-weight:600;}
+table.t td.r{color:var(--red);font-weight:600;}
+table.t td.hi{color:var(--accent);font-weight:700;}
+table.t td.bold{font-weight:700;}
+
+/* ── FETCH TIME ── */
+.ftime{font-size:.66rem;color:var(--muted);}
+</style>
+</head>
 <body>
 
-<div class="container">
-
-    <!-- Sidebar -->
-    <div class="sidebar">
-        <div class="logo">
-    <img src="/static/logo.png" alt="Logo">
-</div>
-        <a href="/">Home</a>
-		<a href="/intraday">Intraday Dashboard</a>
-<a href="/chain">Max OI</a>
-		<a href="/indices">Indices</a>
-        <a href="/dma">DMA</a>
-        <a href="/oi">OI</a>
-        <a href="/top5">TOP 5</a>
-        <a href="/stocks">Stocks</a>
-		<a href="/orderflow">orderflow</a>
+<!-- SIDEBAR -->
+<nav class="sidebar">
+  <div class="sb-logo">
+    <div class="sb-logo-icon">AT</div>
+    <div>
+      <div class="sb-logo-text">Algo Terminal</div>
+      <div class="sb-logo-ver">v3.0 · NSE</div>
     </div>
+  </div>
 
-    <!-- Main Content -->
-    <div class="main">
+  <div class="sb-section">Main</div>
+  <a href="/home"      class="sb-link {% if request.path in ['/','/home'] %}active{% endif %}">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+    Dashboard
+  </a>
+  <a href="/intraday"  class="sb-link {% if request.path=='/intraday' %}active{% endif %}">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+    Intraday
+  </a>
+  <a href="/maxoi"     class="sb-link {% if request.path in ['/maxoi','/chain'] %}active{% endif %}">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>
+    Max OI
+  </a>
+  <a href="/indices"   class="sb-link {% if request.path=='/indices' %}active{% endif %}">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+    Indices
+  </a>
+  <a href="/dma"       class="sb-link {% if request.path=='/dma' %}active{% endif %}">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+    DMA
+  </a>
 
-        <!-- Header -->
-        <div class="header">
-            <h1>Algo Terminal</h1>
-            <div id="clock"></div>
-        </div>
+  <div class="sb-section">Options</div>
+  <a href="/oi"        class="sb-link {% if request.path=='/oi' %}active{% endif %}">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/></svg>
+    OI
+  </a>
+  <a href="/top5"      class="sb-link {% if request.path=='/top5' %}active{% endif %}">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+    Top 5
+  </a>
+  <a href="/stocks"    class="sb-link {% if request.path=='/stocks' %}active{% endif %}">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+    Stocks
+  </a>
+  <a href="/orderflow" class="sb-link {% if request.path=='/orderflow' %}active{% endif %}">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H3"/><path d="M7 21a2 2 0 0 1-2-2v-6a2 2 0 0 1 2-2h14"/></svg>
+    Order Flow
+  </a>
+</nav>
 
-        <!-- Page Content -->
-        <div class="content">
-            {% block content %}{% endblock %}
-        </div>
-
-    </div>
-
+<!-- MAIN -->
+<div class="main">
+  {% block content %}{% endblock %}
 </div>
 
-<script src="/static/script.js"></script>
+<script>
+function tick(){
+  const el=document.getElementById('clock');
+  if(el) el.innerText=new Date().toLocaleTimeString('en-IN');
+}
+setInterval(tick,1000); tick();
 
+function isOpen(){
+  const n=new Date(),h=n.getHours(),m=n.getMinutes();
+  return (h>9||(h===9&&m>=15))&&(h<15||(h===15&&m<=30));
+}
+setInterval(()=>{ if(isOpen()) location.reload(); }, 180000);
+</script>
 </body>
 </html>
