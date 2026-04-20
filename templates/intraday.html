@@ -1,61 +1,202 @@
 {% extends "base.html" %}
 {% block content %}
+
 <div class="topbar">
   <div class="tb-left">
     <span class="tb-title">Intraday Dashboard</span>
-    <span class="tb-sub">{{ data.date }} · {{ data.time }}</span>
+    <span class="tb-sub" id="timeText"></span>
   </div>
-  <div class="tb-right"><span class="tb-clock" id="clock"></span></div>
+  <div class="tb-right">
+    <span class="tb-clock" id="clock"></span>
+  </div>
 </div>
 
 <style>
 .intra-block{
-  background:var(--bg2);border:1px solid var(--border);border-radius:12px;overflow:hidden;
+  background:var(--bg2);
+  border:1px solid var(--border);
+  border-radius:12px;
+  overflow:hidden;
   transition:border-color .2s;
+  margin-bottom:16px;
 }
 .intra-block:hover{border-color:var(--border2);}
+
 .intra-head{
-  padding:16px 22px;border-bottom:1px solid var(--border);
-  display:flex;align-items:center;justify-content:space-between;
+  padding:16px 22px;
+  border-bottom:1px solid var(--border);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
   background:var(--bg3);
 }
-.intra-name{font-family:var(--sans);font-size:.9rem;font-weight:800;color:var(--accent);}
-.intra-ltp {font-size:1.7rem;font-weight:700;color:var(--green);}
-.ohlc-grid {display:grid;grid-template-columns:repeat(4,1fr);}
-.ohlc-cell {padding:16px 22px;border-right:1px solid var(--border);}
+
+.intra-name{
+  font-family:var(--sans);
+  font-size:.9rem;
+  font-weight:800;
+  color:var(--accent);
+}
+
+.intra-ltp{
+  font-size:1.7rem;
+  font-weight:700;
+  transition:all 0.3s ease;
+}
+
+/* 🔥 Blink Effects */
+.blink-green {
+  color: var(--green) !important;
+  animation: blinkAnim 0.6s ease;
+}
+
+.blink-red {
+  color: var(--red) !important;
+  animation: blinkAnim 0.6s ease;
+}
+
+@keyframes blinkAnim {
+  0%   { opacity: 0.2; transform: scale(1.1); }
+  50%  { opacity: 1; transform: scale(1.25); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+/* OHLC */
+.ohlc-grid {
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+}
+
+.ohlc-cell {
+  padding:16px 22px;
+  border-right:1px solid var(--border);
+}
 .ohlc-cell:last-child{border-right:none;}
-.ohlc-lbl  {font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;}
-.ohlc-val  {font-size:1rem;font-weight:600;color:var(--text);}
+
+.ohlc-lbl{
+  font-size:.6rem;
+  letter-spacing:.1em;
+  text-transform:uppercase;
+  color:var(--muted);
+  margin-bottom:6px;
+}
+
+.ohlc-val{
+  font-size:1rem;
+  font-weight:600;
+  color:var(--text);
+}
 </style>
 
 <div class="page">
   <div class="slabel">Live Market Data</div>
 
-  {% for item in [data.nifty, data.bank, data.sensex] %}
+  <!-- NIFTY -->
   <div class="intra-block">
     <div class="intra-head">
-      <div class="intra-name">{{ item.name }}</div>
-      <div class="intra-ltp">{{ item.ltp }}</div>
+      <div class="intra-name">NIFTY 50</div>
+      <div class="intra-ltp" id="ltp-0">{{ data.nifty.ltp }}</div>
     </div>
     <div class="ohlc-grid">
-      <div class="ohlc-cell">
-        <div class="ohlc-lbl">Open</div>
-        <div class="ohlc-val">{{ item.open }}</div>
-      </div>
-      <div class="ohlc-cell">
-        <div class="ohlc-lbl">High</div>
-        <div class="ohlc-val" style="color:var(--green)">{{ item.high }}</div>
-      </div>
-      <div class="ohlc-cell">
-        <div class="ohlc-lbl">Low</div>
-        <div class="ohlc-val" style="color:var(--red)">{{ item.low }}</div>
-      </div>
-      <div class="ohlc-cell">
-        <div class="ohlc-lbl">Close</div>
-        <div class="ohlc-val" style="color:var(--amber)">{{ item.close }}</div>
-      </div>
+      <div class="ohlc-cell"><div class="ohlc-lbl">Open</div><div class="ohlc-val" id="open-0">{{ data.nifty.open }}</div></div>
+      <div class="ohlc-cell"><div class="ohlc-lbl">High</div><div class="ohlc-val" style="color:var(--green)" id="high-0">{{ data.nifty.high }}</div></div>
+      <div class="ohlc-cell"><div class="ohlc-lbl">Low</div><div class="ohlc-val" style="color:var(--red)" id="low-0">{{ data.nifty.low }}</div></div>
+      <div class="ohlc-cell"><div class="ohlc-lbl">Close</div><div class="ohlc-val" style="color:var(--amber)" id="close-0">{{ data.nifty.close }}</div></div>
     </div>
   </div>
-  {% endfor %}
+
+  <!-- BANKNIFTY -->
+  <div class="intra-block">
+    <div class="intra-head">
+      <div class="intra-name">BANK NIFTY</div>
+      <div class="intra-ltp" id="ltp-1">{{ data.bank.ltp }}</div>
+    </div>
+    <div class="ohlc-grid">
+      <div class="ohlc-cell"><div class="ohlc-lbl">Open</div><div class="ohlc-val" id="open-1">{{ data.bank.open }}</div></div>
+      <div class="ohlc-cell"><div class="ohlc-lbl">High</div><div class="ohlc-val" style="color:var(--green)" id="high-1">{{ data.bank.high }}</div></div>
+      <div class="ohlc-cell"><div class="ohlc-lbl">Low</div><div class="ohlc-val" style="color:var(--red)" id="low-1">{{ data.bank.low }}</div></div>
+      <div class="ohlc-cell"><div class="ohlc-lbl">Close</div><div class="ohlc-val" style="color:var(--amber)" id="close-1">{{ data.bank.close }}</div></div>
+    </div>
+  </div>
+
+  <!-- SENSEX -->
+  <div class="intra-block">
+    <div class="intra-head">
+      <div class="intra-name">SENSEX</div>
+      <div class="intra-ltp" id="ltp-2">{{ data.sensex.ltp }}</div>
+    </div>
+    <div class="ohlc-grid">
+      <div class="ohlc-cell"><div class="ohlc-lbl">Open</div><div class="ohlc-val" id="open-2">{{ data.sensex.open }}</div></div>
+      <div class="ohlc-cell"><div class="ohlc-lbl">High</div><div class="ohlc-val" style="color:var(--green)" id="high-2">{{ data.sensex.high }}</div></div>
+      <div class="ohlc-cell"><div class="ohlc-lbl">Low</div><div class="ohlc-val" style="color:var(--red)" id="low-2">{{ data.sensex.low }}</div></div>
+      <div class="ohlc-cell"><div class="ohlc-lbl">Close</div><div class="ohlc-val" style="color:var(--amber)" id="close-2">{{ data.sensex.close }}</div></div>
+    </div>
+  </div>
+
 </div>
+
+<script>
+let previous = {
+  nifty: 0,
+  bank: 0,
+  sensex: 0
+};
+
+async function fetchData() {
+  try {
+    const res = await fetch("/intraday-data");
+    const data = await res.json();
+
+    update(0, "nifty", data.nifty);
+    update(1, "bank", data.bank);
+    update(2, "sensex", data.sensex);
+
+    document.getElementById("timeText").innerText =
+      "Updated: " + new Date().toLocaleTimeString();
+
+  } catch (e) {
+    console.error("Error:", e);
+  }
+}
+
+function update(i, key, d) {
+  updateLTP(i, key, d.ltp);
+
+  document.getElementById(`open-${i}`).innerText = d.open;
+  document.getElementById(`high-${i}`).innerText = d.high;
+  document.getElementById(`low-${i}`).innerText = d.low;
+  document.getElementById(`close-${i}`).innerText = d.close;
+}
+
+function updateLTP(i, key, val) {
+  const el = document.getElementById(`ltp-${i}`);
+  const prev = previous[key];
+
+  el.classList.remove("blink-green", "blink-red");
+
+  if (prev !== 0) {
+    if (val > prev) {
+      el.classList.add("blink-green");
+    } else if (val < prev) {
+      el.classList.add("blink-red");
+    }
+  }
+
+  el.innerText = val;
+  previous[key] = val;
+}
+
+/* ⏱️ Clock */
+setInterval(() => {
+  document.getElementById("clock").innerText =
+    new Date().toLocaleTimeString();
+}, 1000);
+
+/* 🔄 Refresh every 5 sec */
+setInterval(fetchData, 5000);
+
+/* 🚀 First load */
+fetchData();
+</script>
+
 {% endblock %}
