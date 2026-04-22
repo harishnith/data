@@ -4,7 +4,7 @@
 <div class="topbar">
   <div class="tb-left">
     <span class="tb-title">Intraday Dashboard</span>
-    <span class="tb-sub" id="timeText">{{ data.time }}</span>
+    <span class="tb-sub" id="timeText"></span>
   </div>
   <div class="tb-right">
     <span class="tb-clock" id="clock"></span>
@@ -46,19 +46,21 @@
   font-weight:800;
 }
 
-/* color stays */
+/* ✅ BASE COLORS (never white) */
 .ltp-up { color: var(--green); }
 .ltp-down { color: var(--red); }
 
-/* heartbeat */
+/* 🔥 HEARTBEAT BLINK (continuous) */
 .pulse {
   animation: pulse 1s infinite;
 }
 
 @keyframes pulse {
-  0% { transform: scale(1); opacity:1; }
-  50% { transform: scale(1.25); opacity:.6; }
-  100% { transform: scale(1); opacity:1; }
+  0%   { transform: scale(1); opacity: 1; }
+  25%  { transform: scale(1.15); opacity: .7; }
+  50%  { transform: scale(1.25); opacity: 1; }
+  75%  { transform: scale(1.1); opacity: .8; }
+  100% { transform: scale(1); opacity: 1; }
 }
 
 .change-box{
@@ -93,23 +95,56 @@
 
 <div class="page">
 
-{% for i, row in enumerate([data.nifty, data.bank, data.sensex]) %}
+<!-- NIFTY -->
 <div class="intra-block">
   <div class="intra-head">
-    <div class="intra-name">{{ row.name }}</div>
+    <div class="intra-name">NIFTY 50</div>
     <div class="intra-right">
-      <div class="intra-ltp" id="ltp-{{ i }}">{{ row.ltp }}</div>
-      <div id="chg-{{ i }}" class="change-box"></div>
+      <div class="intra-ltp" id="ltp-0"></div>
+      <div id="chg-0" class="change-box"></div>
     </div>
   </div>
   <div class="ohlc-grid">
-    <div class="ohlc-cell"><div class="ohlc-lbl">Open</div><div id="open-{{ i }}">{{ row.open }}</div></div>
-    <div class="ohlc-cell"><div class="ohlc-lbl">High</div><div id="high-{{ i }}" style="color:var(--red)">{{ row.high }}</div></div>
-    <div class="ohlc-cell"><div class="ohlc-lbl">Low</div><div id="low-{{ i }}" style="color:var(--green)">{{ row.low }}</div></div>
-    <div class="ohlc-cell"><div class="ohlc-lbl">Close</div><div id="close-{{ i }}">{{ row.close }}</div></div>
+    <div class="ohlc-cell"><div class="ohlc-lbl">Open</div><div id="open-0"></div></div>
+    <div class="ohlc-cell"><div class="ohlc-lbl">High</div><div id="high-0" style="color:var(--red)"></div></div>
+    <div class="ohlc-cell"><div class="ohlc-lbl">Low</div><div id="low-0" style="color:var(--green)"></div></div>
+    <div class="ohlc-cell"><div class="ohlc-lbl">Close</div><div id="close-0"></div></div>
   </div>
 </div>
-{% endfor %}
+
+<!-- BANK -->
+<div class="intra-block">
+  <div class="intra-head">
+    <div class="intra-name">BANK NIFTY</div>
+    <div class="intra-right">
+      <div class="intra-ltp" id="ltp-1"></div>
+      <div id="chg-1" class="change-box"></div>
+    </div>
+  </div>
+  <div class="ohlc-grid">
+    <div class="ohlc-cell"><div class="ohlc-lbl">Open</div><div id="open-1"></div></div>
+    <div class="ohlc-cell"><div class="ohlc-lbl">High</div><div id="high-1" style="color:var(--red)"></div></div>
+    <div class="ohlc-cell"><div class="ohlc-lbl">Low</div><div id="low-1" style="color:var(--green)"></div></div>
+    <div class="ohlc-cell"><div class="ohlc-lbl">Close</div><div id="close-1"></div></div>
+  </div>
+</div>
+
+<!-- SENSEX -->
+<div class="intra-block">
+  <div class="intra-head">
+    <div class="intra-name">SENSEX</div>
+    <div class="intra-right">
+      <div class="intra-ltp" id="ltp-2"></div>
+      <div id="chg-2" class="change-box"></div>
+    </div>
+  </div>
+  <div class="ohlc-grid">
+    <div class="ohlc-cell"><div class="ohlc-lbl">Open</div><div id="open-2"></div></div>
+    <div class="ohlc-cell"><div class="ohlc-lbl">High</div><div id="high-2" style="color:var(--red)"></div></div>
+    <div class="ohlc-cell"><div class="ohlc-lbl">Low</div><div id="low-2" style="color:var(--green)"></div></div>
+    <div class="ohlc-cell"><div class="ohlc-lbl">Close</div><div id="close-2"></div></div>
+  </div>
+</div>
 
 </div>
 
@@ -118,7 +153,10 @@ let previous = { nifty:null, bank:null, sensex:null };
 
 function isMarketOpen(){
   const now = new Date();
-  return (now.getHours() < 15 || (now.getHours()==15 && now.getMinutes()<30));
+  const hrs = now.getHours();
+  const min = now.getMinutes();
+
+  return (hrs < 15 || (hrs === 15 && min < 30));
 }
 
 function calcChange(ltp, close){
@@ -130,25 +168,35 @@ function calcChange(ltp, close){
 function update(i, key, d){
   const ltp = parseFloat(d.ltp);
   const prev = previous[key];
+
   const el = document.getElementById(`ltp-${i}`);
 
+  // reset classes
   el.classList.remove("ltp-up","ltp-down","pulse");
 
   if(prev !== null){
-    if(ltp > prev) el.classList.add("ltp-up");
-    else if(ltp < prev) el.classList.add("ltp-down");
+    if(ltp > prev){
+      el.classList.add("ltp-up");
+    } else if(ltp < prev){
+      el.classList.add("ltp-down");
+    }
   }
 
-  if(isMarketOpen()) el.classList.add("pulse");
+  // 🔥 only pulse if market open
+  if(isMarketOpen()){
+    el.classList.add("pulse");
+  }
 
   el.innerText = ltp.toFixed(2);
   previous[key] = ltp;
 
+  // OHLC
   document.getElementById(`open-${i}`).innerText = d.open;
   document.getElementById(`high-${i}`).innerText = d.high;
   document.getElementById(`low-${i}`).innerText = d.low;
   document.getElementById(`close-${i}`).innerText = d.close;
 
+  // change
   const { diff, pct } = calcChange(ltp, parseFloat(d.close));
   const chg = document.getElementById(`chg-${i}`);
 
@@ -164,7 +212,7 @@ function update(i, key, d){
 }
 
 async function fetchData(){
-  const res = await fetch("/api/intraday");  // ✅ FIXED
+  const res = await fetch("/intraday-data");
   const data = await res.json();
 
   update(0,"nifty",data.nifty);
