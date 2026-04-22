@@ -52,29 +52,53 @@
     <div>
       <div class="slabel">Index Overview</div>
       <div class="tbl-wrap">
+
         {% for row in [
           ("Nifty 50",    data.nifty_price,      data.nifty_change),
-          ("Bank Nifty",  data.banknifty_price,   data.banknifty_change),
-          ("Sensex",      data.sensex_price,      data.sensex_change),
+          ("Bank Nifty",  data.banknifty_price, data.banknifty_change),
+          ("Sensex",      data.sensex_price,    data.sensex_change),
         ] %}
+
+        {% set price = row[1]|float %}
+        {% set change = row[2]|float %}
+        {% set pct = (change / price * 100) if price != 0 else 0 %}
+
         <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--border);">
+          
+          <!-- Index Name -->
           <span style="font-size:.78rem;color:var(--text2);">{{ row[0] }}</span>
+
+          <!-- Value + Change -->
           <div style="display:flex;align-items:center;gap:12px;">
-            <span style="font-size:1rem;font-weight:600;">{{ row[1] }}</span>
-            <span style="padding:3px 9px;border-radius:4px;font-size:.7rem;font-weight:700;
-              {% if row[2]|float > 0 %}background:rgba(34,211,165,.12);color:var(--green)
-              {% else %}background:rgba(248,113,113,.1);color:var(--red){% endif %}">
-              {% if row[2]|float > 0 %}▲{% else %}▼{% endif %} {{ row[2] }}%
+            
+            <!-- Price -->
+            <span style="font-size:1rem;font-weight:600;">
+              {{ "%.2f"|format(price) }}
             </span>
+
+            <!-- Change Badge -->
+            <span style="padding:3px 9px;border-radius:4px;font-size:.7rem;font-weight:700;
+              {% if change > 0 %}background:rgba(34,211,165,.12);color:var(--green)
+              {% else %}background:rgba(248,113,113,.1);color:var(--red){% endif %}">
+              
+              {% if change > 0 %}▲{% else %}▼{% endif %} 
+              {{ "%.1f"|format(change) }} pts 
+              ({{ "%.2f"|format(pct) }}%)
+
+            </span>
+
           </div>
         </div>
+
         {% endfor %}
+
         <div style="padding:8px 18px;border-top:1px solid var(--border);">
           <span class="ftime">⏱ {{ data.fetch_time }}</span>
         </div>
       </div>
     </div>
 
+    <!-- OI BUILDUP -->
     <div>
       <div class="slabel">OI Build-up</div>
       <div class="tbl-wrap" style="padding:8px 0;">
