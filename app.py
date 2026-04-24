@@ -221,15 +221,19 @@ def get_indices_data():
         fetch_time = safe(sheet.acell("E52").value)
         raw = get_range("B53:E63")  # header + 10 indices
 
-        indices = []
-        for r in raw[1:]:  # skip header row
-            if not r or len(r) < 4: continue
-            indices.append({
-                "name":   safe(r[0]),
-                "cmp":    fmt(r[1]),
-                "change": clean_num(r[2]),
-                "pct":    clean_num(r[3]),
-            })
+       indices = []
+for r in raw[1:]:  # skip header row
+    if not r or len(r) < 4:
+        continue
+    indices.append({
+        "name":   safe(r[0]),
+        "cmp":    fmt(r[1]),
+        "change": clean_num(r[2]),
+        "pct":    clean_num(r[3]),
+    })
+
+# 🔥 SORT: Highest % → Lowest %
+indices = sorted(indices, key=lambda x: x["pct"], reverse=True)
 
         # stocks B67:E75
         stocks_raw = get_range("B67:E75")
