@@ -33,7 +33,17 @@ def safe(val, default="—"):
 
 def clean_num(val):
     try:
-        return float(str(val).replace(",", "").replace(" ", ""))
+        s = str(val).replace(",", "").strip().upper()
+
+        if "B" in s:
+            return float(s.replace("B", "")) * 1_000_000_000
+        elif "M" in s:
+            return float(s.replace("M", "")) * 1_000_000
+        elif "K" in s:
+            return float(s.replace("K", "")) * 1_000
+        else:
+            return float(s)
+
     except:
         return 0.0
 
