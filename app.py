@@ -399,38 +399,36 @@ def get_orderflow_data():
                 return f"{v/1_000:.1f}K"
             return str(int(v))
 
-        def parse_of(rows, start, end):
+        def parse_rows(rows):
             out = []
-            for r in rows[start:end]:
+            for r in rows:
+                # skip invalid / header rows
                 if len(r) < 8:
                     continue
+                if not r[1] or ":" not in str(r[1]):
+                    continue  # skip header rows
 
                 delta = clean_num(r[6])
 
                 out.append({
-                    "date":     safe(r[0]),
                     "time":     safe(r[1]),
                     "spot":     fmt(r[2]),
                     "volume":   fmt_vol(r[3]),
                     "buyers":   fmt_vol(r[4]),
                     "sellers":  fmt_vol(r[5]),
                     "delta":    delta,
-                    "delta_fmt": fmt_vol(delta),  # ✅ FIXED
-                    "strength": clean_num(r[7]),
+                    "delta_fmt": fmt_vol(delta),
                     "bias":     "Bull" if delta > 0 else "Bear" if delta < 0 else "Neutral"
                 })
-
             return out
 
-        # 🔥 NIFTY rows (from your sheet)
-        nifty_of = parse_of(raw, 2, 7)
-
-        # 🔥 BANKNIFTY rows
-        bank_of = parse_of(raw, 9, 15)
+        # 🔥 SPLIT DATA CORRECTLY
+        nifty_block = raw[2:8]   # rows with actual nifty data
+        bank_block  = raw[10:16] # rows with banknifty data
 
         return {
-            "nifty": nifty_of,
-            "bank":  bank_of,
+            "nifty": parse_rows(nifty_block),
+            "bank":  parse_rows(bank_block),
         }
 
     except Exception as e:
