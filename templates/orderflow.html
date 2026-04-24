@@ -1,6 +1,57 @@
 {% extends "base.html" %}
 {% block content %}
 
+<style>
+.orderflow-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 20px;
+}
+
+.card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+}
+
+.pro-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+
+.pro-table th {
+    text-align: left;
+    padding: 10px;
+    color: var(--text2);
+    border-bottom: 1px solid var(--border);
+}
+
+.pro-table td {
+    padding: 10px;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+
+/* alignment fix */
+.pro-table td:nth-child(2),
+.pro-table td:nth-child(3),
+.pro-table td:nth-child(4),
+.pro-table td:nth-child(5),
+.pro-table td:nth-child(6) {
+    text-align: right;
+}
+
+/* colors */
+.green { color: #22c55e; font-weight: 600; }
+.red { color: #ef4444; font-weight: 600; }
+
+/* zebra rows */
+.pro-table tbody tr:nth-child(even) {
+    background: rgba(255,255,255,0.02);
+}
+</style>
+
 <div class="top-header">
     <h2>Order Flow</h2>
 </div>
