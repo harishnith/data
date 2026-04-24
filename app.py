@@ -389,26 +389,24 @@ def get_orderflow_data():
     try:
         raw = get_range("G67:N81")
 
-        # Row 0: header labels row
-        # Row 1: col headers (Date, Time, Nifty Spot, Total Vol, Buyers, Sellers, Delta, Strength)
-        # Rows 2-6: Nifty data
-        # Row 7: BN header
-        # Row 8: col headers
-        # Rows 9-13: BankNifty data
-
         def fmt_vol(v):
             v = clean_num(v)
-            if v >= 1_000_000_000: return f"{v/1_000_000_000:.2f}B"
-            if v >= 1_000_000:     return f"{v/1_000_000:.1f}M"
-            if v >= 1_000:         return f"{v/1_000:.1f}K"
+            if v >= 1_000_000_000:
+                return f"{v/1_000_000_000:.2f}B"
+            if v >= 1_000_000:
+                return f"{v/1_000_000:.1f}M"
+            if v >= 1_000:
+                return f"{v/1_000:.1f}K"
             return str(int(v))
 
         def parse_of(rows, start, end):
             out = []
             for r in rows[start:end]:
-                if len(r) < 8: continue
+                if len(r) < 8:
+                    continue
+
                 delta = clean_num(r[6])
-                strength = clean_num(r[7]) if len(r) > 7 else 0
+
                 out.append({
                     "date":     safe(r[0]),
                     "time":     safe(r[1]),
@@ -417,23 +415,27 @@ def get_orderflow_data():
                     "buyers":   fmt_vol(r[4]),
                     "sellers":  fmt_vol(r[5]),
                     "delta":    delta,
-                    "delta_fmt": fmt_vol(abs(delta)),
-                    "strength": strength,
-                    "bias":     "Bull" if delta > 0 else "Bear",
+                    "delta_fmt": fmt_vol(delta),  # ✅ FIXED
+                    "strength": clean_num(r[7]),
+                    "bias":     "Bull" if delta > 0 else "Bear" if delta < 0 else "Neutral"
                 })
+
             return out
 
+        # 🔥 NIFTY rows (from your sheet)
         nifty_of = parse_of(raw, 2, 7)
-        bank_of  = parse_of(raw, 9, 15)
+
+        # 🔥 BANKNIFTY rows
+        bank_of = parse_of(raw, 9, 15)
 
         return {
             "nifty": nifty_of,
             "bank":  bank_of,
         }
+
     except Exception as e:
         print("ORDERFLOW ERROR:", e)
-        return {"nifty":[],"bank":[]}
-
+        return {"nifty": [], "bank": []}
 # =========================
 # 🌐 ROUTES
 # =========================
