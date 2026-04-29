@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="topbar">
+  <div class="tb-left">
+    <span class="tb-title">Commodities</span>
+  </div>
+</div>
+
+<div class="page">
+
+  <div class="slabel">Live Commodities</div>
+
+  <div class="g4">
+
+    {% for c in data %}
+
+    <div class="card">
+      <div class="card-accent {% if c.change > 0 %}g{% else %}r{% endif %}"></div>
+
+      <div class="card-lbl">{{ c.name }}</div>
+
+      <div class="card-val {% if c.change > 0 %}val-g{% else %}val-r{% endif %}">
+        {{ c.price }}
+      </div>
+
+      <div class="card-sub">
+        {% if c.change > 0 %}▲{% else %}▼{% endif %}
+        {{ c.change }}
+      </div>
+
+      <div class="card-sub">
+        H: {{ c.high }} | L: {{ c.low }}
+      </div>
+    </div>
+
+    {% endfor %}
+
+  </div>
+
+</div>
+
+{% endblock %}
