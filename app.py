@@ -470,6 +470,36 @@ def intraday():
 @app.route("/maxoi")
 def chain():
     return render_template("chain.html", data=get_chain_data())
+# ===== COMMODITIES ROUTE =====
+@app.route("/commodities")
+def commodities():
+
+    symbols = [
+        "MCX:GOLD",
+        "MCX:SILVER",
+        "MCX:CRUDEOIL",
+        "MCX:NATURALGAS"
+    ]
+
+    data = fyers.quotes({"symbols": ",".join(symbols)})
+
+    commodities_data = []
+
+    if data.get("s") == "ok":
+        for item in data["d"]:
+            v = item["v"]
+
+            change = v["lp"] - v["prev_close_price"]
+
+            commodities_data.append({
+                "name": item["n"].split(":")[1],
+                "price": round(v["lp"], 2),
+                "change": round(change, 2),
+                "high": v["high_price"],
+                "low": v["low_price"]
+            })
+
+    return render_template("commodities.html", data=commodities_data)    
 
 @app.route("/indices")
 def indices():
