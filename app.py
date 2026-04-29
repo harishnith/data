@@ -564,6 +564,10 @@ def unlock():
     if request.form.get("password") == "1234":
         session["logged_in"] = True
     return ("", 204)
+@app.route("/logout")
+def logout():
+    session.clear()
+    return redirect("/home")
 @app.route("/api/intraday")   
 def api_intraday():   return jsonify(get_intraday_data())
 @app.route("/api/chain")      
