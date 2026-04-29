@@ -20,7 +20,7 @@ scope = [
 creds_dict = json.loads(os.environ["GOOGLE_CREDENTIALS"])
 creds = Credentials.from_service_account_info(creds_dict, scopes=scope)
 client = gspread.authorize(creds)
-
+c
 sheet = client.open("Nifty_OI_Data").worksheet("Dashboard")
 
 # ===== FYERS INIT =====
@@ -473,15 +473,25 @@ def intraday():
 def chain():
     return render_template("chain.html", data=get_chain_data())
 # ===== COMMODITIES ROUTE =====
+# ===== COMMODITIES ROUTE =====
 @app.route("/commodities")
 def commodities():
 
+    # ✅ Correct working symbols
     symbols = [
         "MCX:GOLD26JUNFUT",
-        "MCX:SILVER26JUNFUT",
-        "MCX:CRUDEOIL26JUNFUT",
-        "MCX:NATURALGAS26JUNFUT"
+        "MCX:SILVER26MAYFUT",
+        "MCX:CRUDEOIL26MAYFUT",
+        "MCX:NATGASMINI26MAYFUT"
     ]
+
+    # ✅ Clean names mapping
+    name_map = {
+        "GOLD": "GOLD",
+        "SILVER": "SILVER",
+        "CRUDEOIL": "CRUDE OIL",
+        "NATGAS": "NATURAL GAS"
+    }
 
     try:
         data = fyers.quotes({"symbols": ",".join(symbols)})
@@ -492,13 +502,22 @@ def commodities():
             for item in data["d"]:
                 v = item["v"]
 
+                symbol_name = item["n"].split(":")[1]
+
+                # Clean name
+                clean_name = "UNKNOWN"
+                for key in name_map:
+                    if key in symbol_name:
+                        clean_name = name_map[key]
+                        break
+
                 lp = v.get("lp", 0)
                 prev = v.get("prev_close_price", 0)
 
                 change = lp - prev
 
                 commodities_data.append({
-                    "name": item["n"].split(":")[1],
+                    "name": clean_name,
                     "price": round(lp, 2),
                     "change": round(change, 2),
                     "high": v.get("high_price", 0),
@@ -509,7 +528,7 @@ def commodities():
 
     except Exception as e:
         print("❌ COMMODITIES ERROR:", e)
-        return "Error loading commodities"   
+        return "Error loading commodities"
 
 @app.route("/indices")
 def indices():
