@@ -1,17 +1,20 @@
 import os
 import json
 from datetime import datetime
-from flask import Flask, render_template, jsonify
+from flask import Flask, render_template, jsonify, session, redirect, send_from_directory, request
 from google.oauth2.service_account import Credentials
 import gspread
-from flask import Flask, render_template
 from fyers_apiv3 import fyersModel
-from flask import session, redirect, url_for, send_from_directory
 
 app = Flask(__name__)
 
 # =========================
-# 🔐 GOOGLE SHEETS SETUP
+# 🔐 SESSION
+# =========================
+app.secret_key = "your_super_secret_key_123"
+
+# =========================
+# 🔐 GOOGLE SHEETS
 # =========================
 scope = [
     "https://www.googleapis.com/auth/spreadsheets",
@@ -21,19 +24,36 @@ scope = [
 creds_dict = json.loads(os.environ["GOOGLE_CREDENTIALS"])
 creds = Credentials.from_service_account_info(creds_dict, scopes=scope)
 client = gspread.authorize(creds)
-c
+
 sheet = client.open("Nifty_OI_Data").worksheet("Dashboard")
 
-# ===== FYERS INIT =====
-APP_ID =  "7IAQXYIXWH-100"
-ACCESS_TOKEN = open("fyers_token.txt").read().strip()
+# =========================
+# 🔐 FYERS (FIXED)
+# =========================
+APP_ID = "7IAQXYIXWH-100"
 
-fyers = fyersModel.FyersModel(
-    client_id=APP_ID,
-    token=ACCESS_TOKEN,
-    log_path=""
-)
+ACCESS_TOKEN = os.environ.get("FYERS_TOKEN")
+if not ACCESS_TOKEN:
+    raise Exception("FYERS_TOKEN missing")
 
+print("TOKEN OK:", ACCESS_TOKEN[:10])
+
+def get_fyers():
+    return fyersModel.FyersModel(
+        client_id=APP_ID,
+        token=ACCESS_TOKEN,
+        log_path=""
+    )
+
+# =========================
+# 🔐 LOGIN CHECK
+# =========================
+def require_login():
+    return not session.get("logged_in")
+
+# =========================
+# 🛠 HELPERS (UNCHANGED)
+# =========================
 # =========================
 # 🛠 HELPERS
 # =========================
@@ -457,31 +477,16 @@ def get_orderflow_data():
     except Exception as e:
         print("ORDERFLOW ERROR:", e)
         return {"nifty": [], "bank": []}
-# =========================
-# 🌐 ROUTES
-# =========================
-@app.route("/")
-@app.route("/home")
-def home():
-    return render_template("home.html", data=get_home_data())
 
-@app.route("/intraday")
-def intraday():
-    return render_template("intraday.html", data=get_intraday_data())
 
-@app.route("/chain")
-@app.route("/download/<filename>")
-def download_file(filename):
-    return send_from_directory("static/downloads", filename, as_attachment=True)
-@app.route("/maxoi")
-def chain():
-    return render_template("chain.html", data=get_chain_data())
-# ===== COMMODITIES ROUTE =====
-# ===== COMMODITIES ROUTE =====
+# =========================
+# 📦 COMMODITIES (FIXED)
+# =========================
 @app.route("/commodities")
 def commodities():
+    if require_login():
+        return redirect("/home")
 
-    # ✅ Correct working symbols
     symbols = [
         "MCX:GOLD26JUNFUT",
         "MCX:SILVER26MAYFUT",
@@ -489,7 +494,6 @@ def commodities():
         "MCX:NATGASMINI26MAYFUT"
     ]
 
-    # ✅ Clean names mapping
     name_map = {
         "GOLD": "GOLD",
         "SILVER": "SILVER",
@@ -498,98 +502,108 @@ def commodities():
     }
 
     try:
+        fyers = get_fyers()
         data = fyers.quotes({"symbols": ",".join(symbols)})
 
-        commodities_data = []
+        out = []
 
         if data.get("s") == "ok":
             for item in data["d"]:
                 v = item["v"]
+                sym = item["n"].split(":")[1]
 
-                symbol_name = item["n"].split(":")[1]
-
-                # Clean name
-                clean_name = "UNKNOWN"
-                for key in name_map:
-                    if key in symbol_name:
-                        clean_name = name_map[key]
-                        break
+                name = next((name_map[k] for k in name_map if k in sym), "UNKNOWN")
 
                 lp = v.get("lp", 0)
                 prev = v.get("prev_close_price", 0)
 
-                change = lp - prev
-
-                commodities_data.append({
-                    "name": clean_name,
-                    "price": round(lp, 2),
-                    "change": round(change, 2),
+                out.append({
+                    "name": name,
+                    "price": lp,
+                    "change": round(lp - prev, 2),
                     "high": v.get("high_price", 0),
                     "low": v.get("low_price", 0)
                 })
 
-        return render_template("commodities.html", data=commodities_data)
+        return render_template("commodities.html", data=out)
 
     except Exception as e:
-        print("❌ COMMODITIES ERROR:", e)
+        print("COMMODITIES ERROR:", e)
         return "Error loading commodities"
 
-@app.route("/indices")
-def indices():
-    return render_template("indices.html", data=get_indices_data())
+# =========================
+# 📥 DOWNLOAD (FIXED)
+# =========================
+@app.route("/download/<filename>")
+def download_file(filename):
+    return send_from_directory("static/downloads", filename, as_attachment=True)
 
-@app.route("/dma")
-def dma():
-    return render_template("dma.html", data=get_dma_data())
-
-@app.route("/oi")
-def oi():
-    return render_template("oi.html", data=get_oi_data())
-
-@app.route("/top5")
-def top5():
-    return render_template("top5.html", data=get_top5_data())
-
-@app.route("/stocks")
-def stocks():
-    return render_template("stocks.html", data=get_stocks_data())
-
-@app.route("/orderflow")
-def orderflow():
-    return render_template("orderflow.html", data=get_orderflow_data())
-
-# JSON endpoints for auto-refresh
-@app.route("/api/home")       
-def api_home():       return jsonify(get_home_data())
+# =========================
+# 🔐 LOGIN
+# =========================
 @app.route("/unlock", methods=["POST"])
 def unlock():
-    from flask import request
     if request.form.get("password") == "1234":
         session["logged_in"] = True
     return ("", 204)
+
 @app.route("/logout")
 def logout():
     session.clear()
     return redirect("/home")
-@app.route("/api/intraday")   
-def api_intraday():   return jsonify(get_intraday_data())
-@app.route("/api/chain")      
-def api_chain():      return jsonify(get_chain_data())
-@app.route("/api/indices")    
-def api_indices():    return jsonify(get_indices_data())
-@app.route("/api/dma")        
-def api_dma():        return jsonify(get_dma_data())
-@app.route("/api/oi")         
-def api_oi():         return jsonify(get_oi_data())
-@app.route("/api/top5")       
-def api_top5():       return jsonify(get_top5_data())
-@app.route("/api/stocks")     
-def api_stocks():     return jsonify(get_stocks_data())
-@app.route("/api/orderflow")  
-def api_orderflow():  return jsonify(get_orderflow_data())
+
+# =========================
+# 🌐 ROUTES (ALL RESTORED WITH DATA)
+# =========================
+@app.route("/")
+@app.route("/home")
+def home():
+    return render_template("home.html", data=get_home_data())
+
+@app.route("/intraday")
+def intraday():
+    if require_login(): return redirect("/home")
+    return render_template("intraday.html", data=get_intraday_data())
+
+@app.route("/chain")
+@app.route("/maxoi")
+def chain():
+    if require_login(): return redirect("/home")
+    return render_template("chain.html", data=get_chain_data())
+
+@app.route("/indices")
+def indices():
+    if require_login(): return redirect("/home")
+    return render_template("indices.html", data=get_indices_data())
+
+@app.route("/dma")
+def dma():
+    if require_login(): return redirect("/home")
+    return render_template("dma.html", data=get_dma_data())
+
+@app.route("/oi")
+def oi():
+    if require_login(): return redirect("/home")
+    return render_template("oi.html", data=get_oi_data())
+
+@app.route("/top5")
+def top5():
+    if require_login(): return redirect("/home")
+    return render_template("top5.html", data=get_top5_data())
+
+@app.route("/stocks")
+def stocks():
+    if require_login(): return redirect("/home")
+    return render_template("stocks.html", data=get_stocks_data())
+
+@app.route("/orderflow")
+def orderflow():
+    if require_login(): return redirect("/home")
+    return render_template("orderflow.html", data=get_orderflow_data())
 
 # =========================
 # ▶️ RUN
 # =========================
 if __name__ == "__main__":
-    app.run(debug=True)
+    port = int(os.environ.get("PORT", 10000))
+    app.run(host="0.0.0.0", port=port)
