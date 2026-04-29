@@ -135,6 +135,77 @@ table.t td.bold{font-weight:700;}
 
 /* ── FETCH TIME ── */
 .ftime{font-size:.66rem;color:var(--muted);}
+/* ===== LAUNCH SCREEN ===== */
+#launch-screen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 9999;
+
+  background: url('/static/images/trading-bg.jpg') no-repeat center center;
+  background-size: cover;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* dark overlay */
+#launch-screen::before {
+  content: "";
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.75);
+}
+
+/* center content */
+#launch-box, #password-box {
+  position: relative;
+  z-index: 10;
+  text-align: center;
+  color: white;
+}
+
+/* title */
+#launch-box h1 {
+  font-family: var(--sans);
+  font-size: 42px;
+  margin-bottom: 20px;
+}
+
+/* buttons */
+#launch-box button,
+#password-box button {
+  padding: 14px 30px;
+  font-size: 16px;
+  font-weight: 700;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+
+  background: linear-gradient(135deg, #38bdf8, #60a5fa);
+  color: #fff;
+}
+
+/* input */
+#password-box input {
+  margin: 10px auto;
+  padding: 10px;
+  width: 220px;
+  border-radius: 6px;
+  border: none;
+  outline: none;
+}
+
+/* error */
+#error-msg {
+  color: red;
+  font-size: 13px;
+}
+  
 </style>
 </head>
 <body>
