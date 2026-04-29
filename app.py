@@ -4,6 +4,8 @@ from datetime import datetime
 from flask import Flask, render_template, jsonify
 from google.oauth2.service_account import Credentials
 import gspread
+from flask import Flask, render_template
+from fyers_apiv3 import fyersModel
 
 app = Flask(__name__)
 
