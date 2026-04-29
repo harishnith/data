@@ -477,31 +477,39 @@ def chain():
 def commodities():
 
     symbols = [
-        "MCX:GOLD",
-        "MCX:SILVER",
-        "MCX:CRUDEOIL",
-        "MCX:NATURALGAS"
+        "MCX:GOLD26JUNFUT",
+        "MCX:SILVER26JUNFUT",
+        "MCX:CRUDEOIL26JUNFUT",
+        "MCX:NATURALGAS26JUNFUT"
     ]
 
-    data = fyers.quotes({"symbols": ",".join(symbols)})
+    try:
+        data = fyers.quotes({"symbols": ",".join(symbols)})
 
-    commodities_data = []
+        commodities_data = []
 
-    if data.get("s") == "ok":
-        for item in data["d"]:
-            v = item["v"]
+        if data.get("s") == "ok":
+            for item in data["d"]:
+                v = item["v"]
 
-            change = v["lp"] - v["prev_close_price"]
+                lp = v.get("lp", 0)
+                prev = v.get("prev_close_price", 0)
 
-            commodities_data.append({
-                "name": item["n"].split(":")[1],
-                "price": round(v["lp"], 2),
-                "change": round(change, 2),
-                "high": v["high_price"],
-                "low": v["low_price"]
-            })
+                change = lp - prev
 
-    return render_template("commodities.html", data=commodities_data)    
+                commodities_data.append({
+                    "name": item["n"].split(":")[1],
+                    "price": round(lp, 2),
+                    "change": round(change, 2),
+                    "high": v.get("high_price", 0),
+                    "low": v.get("low_price", 0)
+                })
+
+        return render_template("commodities.html", data=commodities_data)
+
+    except Exception as e:
+        print("❌ COMMODITIES ERROR:", e)
+        return "Error loading commodities"   
 
 @app.route("/indices")
 def indices():
