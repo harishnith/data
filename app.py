@@ -558,6 +558,12 @@ def orderflow():
 # JSON endpoints for auto-refresh
 @app.route("/api/home")       
 def api_home():       return jsonify(get_home_data())
+@app.route("/unlock", methods=["POST"])
+def unlock():
+    from flask import request
+    if request.form.get("password") == "1234":
+        session["logged_in"] = True
+    return ("", 204)
 @app.route("/api/intraday")   
 def api_intraday():   return jsonify(get_intraday_data())
 @app.route("/api/chain")      
