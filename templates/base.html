@@ -136,6 +136,7 @@ table.t td.bold{font-weight:700;}
 /* ── FETCH TIME ── */
 .ftime{font-size:.66rem;color:var(--muted);}
 /* ===== LAUNCH SCREEN ===== */
+/* ===== LAUNCH SCREEN (UPDATED) ===== */
 #launch-screen {
   position: fixed;
   top: 0;
@@ -144,43 +145,36 @@ table.t td.bold{font-weight:700;}
   height: 100%;
   z-index: 9999;
 
+  /* clear image (no overlay) */
   background: url('/static/images/trading-bg.jpg') no-repeat center center;
   background-size: cover;
-
-  display: flex;
-  justify-content: center;
-  align-items: center;
 }
 
-/* dark overlay */
+/* ❌ REMOVE DARK OVERLAY EFFECT */
 #launch-screen::before {
-  content: "";
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  background: rgba(0,0,0,0.75);
+  display: none;
 }
 
-/* center content */
-#launch-box, #password-box {
-  position: relative;
-  z-index: 10;
-  text-align: center;
+/* bottom-right container */
+#launch-box {
+  position: absolute;
+  bottom: 40px;
+  right: 40px;
+  text-align: right;
   color: white;
 }
 
 /* title */
 #launch-box h1 {
   font-family: var(--sans);
-  font-size: 42px;
-  margin-bottom: 20px;
+  font-size: 28px;
+  margin-bottom: 10px;
 }
 
-/* buttons */
-#launch-box button,
-#password-box button {
-  padding: 14px 30px;
-  font-size: 16px;
+/* button style */
+#launch-box button {
+  padding: 12px 26px;
+  font-size: 14px;
   font-weight: 700;
   border-radius: 8px;
   border: none;
@@ -188,6 +182,20 @@ table.t td.bold{font-weight:700;}
 
   background: linear-gradient(135deg, #38bdf8, #60a5fa);
   color: #fff;
+}
+
+/* password box (center popup) */
+#password-box {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  
+  background: rgba(0,0,0,0.7);
+  padding: 25px;
+  border-radius: 10px;
+  text-align: center;
+  color: white;
 }
 
 /* input */
