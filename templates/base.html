@@ -226,5 +226,23 @@ function isOpen(){
 }
 setInterval(()=>{ if(isOpen()) location.reload(); }, 180000);
 </script>
+  <script>
+function showPassword(){
+  document.getElementById("launch-box").style.display = "none";
+  document.getElementById("password-box").style.display = "block";
+
+  document.getElementById("pass").focus();
+}
+
+function checkPass(){
+  let pass = document.getElementById("pass").value;
+
+  if(pass === "1234"){
+    document.getElementById("launch-screen").style.display = "none";
+  } else {
+    document.getElementById("error-msg").innerText = "❌ Wrong Password";
+  }
+}
+</script>
 </body>
 </html>
