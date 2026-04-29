@@ -21,6 +21,16 @@ client = gspread.authorize(creds)
 
 sheet = client.open("Nifty_OI_Data").worksheet("Dashboard")
 
+# ===== FYERS INIT =====
+APP_ID =  "7IAQXYIXWH-100"
+ACCESS_TOKEN = open("fyers_token.txt").read().strip()
+
+fyers = fyersModel.FyersModel(
+    client_id=APP_ID,
+    token=ACCESS_TOKEN,
+    log_path=""
+)
+
 # =========================
 # 🛠 HELPERS
 # =========================
