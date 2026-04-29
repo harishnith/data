@@ -138,6 +138,24 @@ table.t td.bold{font-weight:700;}
 </style>
 </head>
 <body>
+  <!-- 🔒 LAUNCH SCREEN -->
+<div id="launch-screen">
+
+  <!-- STEP 1: BUTTON VIEW -->
+  <div id="launch-box">
+    <h1>Algo Trading Terminal</h1>
+    <button onclick="showPassword()">🚀 Launch Terminal</button>
+  </div>
+
+  <!-- STEP 2: PASSWORD VIEW -->
+  <div id="password-box" style="display:none;">
+    <h2>Enter Access Code</h2>
+    <input type="password" id="pass" placeholder="Password">
+    <button onclick="checkPass()">Enter</button>
+    <p id="error-msg"></p>
+  </div>
+
+</div>
 
 <!-- SIDEBAR -->
 <nav class="sidebar">
