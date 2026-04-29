@@ -470,6 +470,9 @@ def intraday():
     return render_template("intraday.html", data=get_intraday_data())
 
 @app.route("/chain")
+@app.route("/download/<filename>")
+def download_file(filename):
+    return send_from_directory("static/downloads", filename, as_attachment=True)
 @app.route("/maxoi")
 def chain():
     return render_template("chain.html", data=get_chain_data())
