@@ -1,6 +1,6 @@
 import os
 import json
-from datetime import datetime
+from datetime import datetime, timedelta
 from flask import Flask, render_template, jsonify, session, redirect, send_from_directory, request
 from google.oauth2.service_account import Credentials
 import gspread
@@ -9,9 +9,17 @@ from fyers_apiv3 import fyersModel
 app = Flask(__name__)
 
 # =========================
-# 🔐 SESSION
+# 🔐 SESSION CONFIG (FIXED)
 # =========================
 app.secret_key = "your_super_secret_key_123"
+
+app.permanent_session_lifetime = timedelta(days=7)
+
+app.config.update(
+    SESSION_COOKIE_HTTPONLY=True,
+    SESSION_COOKIE_SECURE=False,  # True only if HTTPS
+    SESSION_COOKIE_SAMESITE="Lax"
+)
 
 # =========================
 # 🔐 GOOGLE SHEETS
@@ -28,15 +36,13 @@ client = gspread.authorize(creds)
 sheet = client.open("Nifty_OI_Data").worksheet("Dashboard")
 
 # =========================
-# 🔐 FYERS (FIXED)
+# 🔐 FYERS
 # =========================
 APP_ID = "7IAQXYIXWH-100"
 
 ACCESS_TOKEN = os.environ.get("FYERS_TOKEN")
 if not ACCESS_TOKEN:
     raise Exception("FYERS_TOKEN missing")
-
-print("TOKEN OK:", ACCESS_TOKEN[:10])
 
 def get_fyers():
     return fyersModel.FyersModel(
@@ -49,11 +55,38 @@ def get_fyers():
 # 🔐 LOGIN CHECK
 # =========================
 def require_login():
-    return not session.get("logged_in")
+    return not session.get("logged_in", False)
 
 # =========================
-# 🛠 HELPERS (UNCHANGED)
+# 🔐 GLOBAL PROTECTION
 # =========================
+@app.before_request
+def check_login():
+    open_routes = ["/", "/home", "/unlock"]
+
+    if request.path.startswith("/static"):
+        return
+
+    if request.path not in open_routes and require_login():
+        return redirect("/home")
+
+# =========================
+# 🔐 LOGIN ROUTE
+# =========================
+@app.route("/unlock", methods=["POST"])
+def unlock():
+    if request.form.get("password") == "1234":
+        session.permanent = True
+        session["logged_in"] = True
+        return jsonify({"status": "success"})
+    
+    return jsonify({"status": "fail"}), 401
+
+@app.route("/logout")
+def logout():
+    session.clear()
+    return redirect("/home")
+
 # =========================
 # 🛠 HELPERS
 # =========================
@@ -93,7 +126,7 @@ def get_range(r):
         return []
 
 # =========================
-# 🏠 HOME DATA  (H53:H56 + indices + OI bars)
+# 🏠 HOME DATA
 # =========================
 def get_home_data():
     try:
@@ -103,457 +136,36 @@ def get_home_data():
         vix       = safe(sheet.acell("H56").value)
         fetch_time = safe(sheet.acell("E52").value)
 
-        # Indices for home (B53:E55 → Nifty, BankNifty, Sensex)
         idx = get_range("B54:E56")
+
         def idx_row(r):
             if not r or len(r) < 4:
-                return {"name":"—","price":"—","change":0,"pct":0}
+                return {"name":"—","price":"—","change":0}
             return {
                 "name":   safe(r[0]),
                 "price":  fmt(r[1]),
-                "change": clean_num(r[2]),
-                "pct":    clean_num(r[3])
+                "change": clean_num(r[2])
             }
 
         nifty_row    = idx_row(idx[0]) if len(idx) > 0 else idx_row([])
         banknifty_row= idx_row(idx[1]) if len(idx) > 1 else idx_row([])
-        sensex_row   = idx_row(idx[2]) if len(idx) > 2 else idx_row([])
-
-        # OI bars — use Max OI strikes (I109:K114 → 6 rows near ATM)
-        oi_raw = get_range("I109:K114")
-        oi_bars = []
-        for r in oi_raw:
-            if len(r) >= 3:
-                call_oi = clean_num(r[0])
-                strike  = safe(r[1])
-                put_oi  = clean_num(r[2])
-                total   = call_oi + put_oi if (call_oi + put_oi) > 0 else 1
-                oi_bars.append({"strike": f"{strike} CE", "value": round(call_oi/total*100), "type":"CE"})
-                oi_bars.append({"strike": f"{strike} PE", "value": round(put_oi/total*100),  "type":"PE"})
 
         return {
-            "date":       datetime.now().strftime("%a, %d %b %Y"),
+            "date": datetime.now().strftime("%a, %d %b %Y"),
             "fetch_time": fetch_time,
-            "trend":      trend,
-            "sentiment":  sentiment,
-            "pcr":        pcr,
-            "vix":        vix,
-            "nifty_price":       nifty_row["price"],
-            "nifty_change":      nifty_row["change"],
-            "banknifty_price":   banknifty_row["price"],
-            "banknifty_change":  banknifty_row["change"],
-            "sensex_price":      sensex_row["price"],
-            "sensex_change":     sensex_row["change"],
-            "oi":         oi_bars[:8],
-            "total_oi":   "—",
-            "max_pain":   "—",
-        }
-    except Exception as e:
-        print("HOME ERROR:", e)
-        return {"date":"—","fetch_time":"—","trend":"—","sentiment":"—","pcr":"—","vix":"—",
-                "nifty_price":"—","nifty_change":0,"banknifty_price":"—","banknifty_change":0,
-                "sensex_price":"—","sensex_change":0,"oi":[],"total_oi":"—","max_pain":"—"}
-
-# =========================
-# 📈 INTRADAY DATA  (pic 2)
-# =========================
-def get_intraday_data():
-    try:
-        # Date/Time from H86, J86
-        date_val = safe(sheet.acell("J86").value)
-        time_val = safe(sheet.acell("M86").value)
-
-        def safe_row(rng):
-            d = get_range(rng)
-            if d and len(d[0]) >= 5:
-                return d[0]
-            return ["0","0","0","0","0"]
-
-        nifty  = safe_row("I90:M90")
-        bank   = safe_row("I94:M94")
-        sensex = safe_row("I98:M98")
-
-        def mk(row, name):
-            return {
-                "name":  name,
-                "ltp":   fmt(row[0]),
-                "open":  fmt(row[1]),
-                "high":  fmt(row[2]),
-                "low":   fmt(row[3]),
-                "close": fmt(row[4]),
-                "change_pct": 0
-            }
-
-        return {
-            "date": date_val,
-            "time": time_val,
-            "nifty":  mk(nifty,  "Nifty 50"),
-            "bank":   mk(bank,   "Bank Nifty"),
-            "sensex": mk(sensex, "Sensex"),
-        }
-    except Exception as e:
-        print("INTRADAY ERROR:", e)
-        empty = {"name":"—","ltp":"—","open":"—","high":"—","low":"—","close":"—","change_pct":0}
-        return {"date":"—","time":"—","nifty":empty,"bank":empty,"sensex":empty}
-
-# =========================
-# 📊 MAX OI / CHAIN  (pic 3) — I105:Q126
-# =========================
-def get_chain_data():
-    try:
-        fetch_date = safe(sheet.acell("K104").value)
-        fetch_time = safe(sheet.acell("Q104").value)
-
-        raw = get_range("I106:Q126")  # 21 rows × 9 cols
-
-        nifty, bank, sensex = [], [], []
-
-        # find ATM for each (max put OI index)
-        def find_atm(rows, put_idx):
-            max_v, atm_i = 0, 0
-            for i, r in enumerate(rows):
-                try:
-                    v = clean_num(r[put_idx])
-                    if v > max_v:
-                        max_v, atm_i = v, i
-                except:
-                    pass
-            return atm_i
-
-        def fmt_oi(v):
-            v = clean_num(v)
-            if v >= 1_000_000: return f"{v/1_000_000:.1f}M"
-            if v >= 1_000:     return f"{v/1_000:.1f}K"
-            return str(int(v))
-
-        for r in raw:
-            if len(r) < 9:
-                r = r + ["0"] * (9 - len(r))
-            nifty.append({"call": fmt_oi(r[0]), "strike": safe(r[1]), "put": fmt_oi(r[2]),
-                          "call_raw": clean_num(r[0]), "put_raw": clean_num(r[2])})
-            bank.append( {"call": fmt_oi(r[3]), "strike": safe(r[4]), "put": fmt_oi(r[5]),
-                          "call_raw": clean_num(r[3]), "put_raw": clean_num(r[5])})
-            sensex.append({"call": fmt_oi(r[6]), "strike": safe(r[7]), "put": fmt_oi(r[8]),
-                           "call_raw": clean_num(r[6]), "put_raw": clean_num(r[8])})
-
-        # mark max call / put OI
-        def mark_max(rows):
-            max_c = max((r["call_raw"] for r in rows), default=0)
-            max_p = max((r["put_raw"]  for r in rows), default=0)
-            for r in rows:
-                r["max_call"] = r["call_raw"] == max_c and max_c > 0
-                r["max_put"]  = r["put_raw"]  == max_p and max_p > 0
-            return rows
-
-        return {
-            "fetch_date": fetch_date,
-            "fetch_time": fetch_time,
-            "nifty":   mark_max(nifty),
-            "bank":    mark_max(bank),
-            "sensex":  mark_max(sensex),
-        }
-    except Exception as e:
-        print("CHAIN ERROR:", e)
-        return {"fetch_date":"—","fetch_time":"—","nifty":[],"bank":[],"sensex":[]}
-
-# =========================
-# 📊 INDICES  (pic 4) — B53:E63 + stocks B67:E75
-# =========================
-def get_indices_data():
-    try:
-        fetch_time = safe(sheet.acell("E52").value)
-        raw = get_range("B53:E63")  # header + 10 indices
-
-        indices = []
-        for r in raw[1:]:  # skip header row
-            if not r or len(r) < 4:
-                continue
-            indices.append({
-                "name":   safe(r[0]),
-                "cmp":    fmt(r[1]),
-                "change": clean_num(r[2]),
-                "pct":    clean_num(r[3]),
-            })
-
-        # ✅ SORT BY % (HIGH → LOW)
-        indices.sort(key=lambda x: x["pct"], reverse=True)
-
-        # stocks
-        stocks_raw = get_range("B67:E75")
-        fetch_time2 = safe(sheet.acell("E66").value)
-
-        stocks = []
-        for r in stocks_raw[1:]:
-            if not r or len(r) < 4:
-                continue
-            stocks.append({
-                "name":   safe(r[0]),
-                "cmp":    fmt(r[1]),
-                "pct":    clean_num(r[2]),
-                "change": clean_num(r[3]),
-            })
-
-        return {
-            "fetch_time": fetch_time,
-            "fetch_time2": fetch_time2,
-            "indices": indices,
-            "stocks": stocks
+            "trend": trend,
+            "sentiment": sentiment,
+            "pcr": pcr,
+            "vix": vix,
+            "nifty_price": nifty_row["price"],
+            "banknifty_price": banknifty_row["price"]
         }
 
-    except Exception as e:
-        print("INDICES ERROR:", e)
-        return {
-            "fetch_time": "—",
-            "fetch_time2": "—",
-            "indices": [],
-            "stocks": []
-        }
-# =========================
-# 📐 DMA  (pic 5) — L33:Q45
-# =========================
-def get_dma_data():
-    try:
-        fetch_time = safe(sheet.acell("Q33").value)
-
-        # Nifty50: L36:N45 (Live L36, levels L37:N45)
-        nifty_live = safe(sheet.acell("M36").value)
-        bank_live  = safe(sheet.acell("P36").value)
-
-        nifty_raw = get_range("L37:N45")
-        bank_raw  = get_range("O37:Q45")
-
-        def parse_dma(rows):
-            out = []
-            for r in rows:
-                if len(r) >= 3:
-                    out.append({"level": safe(r[0]), "value": fmt(r[1]), "status": safe(r[2])})
-            return out
-
-        return {
-            "fetch_time": fetch_time,
-            "nifty_live": fmt(nifty_live),
-            "bank_live":  fmt(bank_live),
-            "nifty": parse_dma(nifty_raw),
-            "bank":  parse_dma(bank_raw),
-        }
-    except Exception as e:
-        print("DMA ERROR:", e)
-        return {"fetch_time":"—","nifty_live":"—","bank_live":"—","nifty":[],"bank":[]}
+    except:
+        return {}
 
 # =========================
-# 📉 OI DATA  (pic 6) — Dashboard B1:L11 (niftyoi sheet mirrored)
-# =========================
-def get_oi_data():
-    try:
-        fetch_time = safe(sheet.acell("Q33").value)
-        raw = get_range("B1:L11")   # header + 10 rows
-
-        headers = raw[0] if raw else []
-        rows = []
-        for r in raw[1:]:
-            if not r: continue
-            row = []
-            for cell in r:
-                row.append(safe(cell))
-            rows.append(row)
-
-        # charts use existing iframe URLs
-        return {
-            "fetch_time": fetch_time,
-            "headers": headers,
-            "rows": rows,
-        }
-    except Exception as e:
-        print("OI ERROR:", e)
-        return {"fetch_time":"—","headers":[],"rows":[]}
-
-# =========================
-# 🏆 TOP 5  (pic 7) — B35:I48
-# =========================
-def get_top5_data():
-    try:
-        fetch_time = safe(sheet.acell("H33").value)
-        raw = get_range("B35:I48")
-
-        # Row 35 = header (Gainers / Losers for Nifty50)
-        # Rows 36-40 = Nifty gainers (B:E) + losers (F:I)
-        # Row 42 = Banknifty header
-        # Rows 43-47 = BN gainers (B:E) + losers (F:I) [some losers may be shorter]
-
-        def parse_block(rows, start, end):
-            gainers, losers = [], []
-            for r in rows[start:end]:
-                if len(r) >= 4 and safe(r[0]) != "—":
-                    gainers.append({"name": safe(r[0]), "cmp": fmt(r[1]), "pct": clean_num(r[2]), "change": clean_num(r[3])})
-                if len(r) >= 8 and safe(r[4]) != "—":
-                    losers.append({"name": safe(r[4]), "cmp": fmt(r[5]), "pct": clean_num(r[6]), "change": clean_num(r[7])})
-            return gainers, losers
-
-        nifty_g, nifty_l   = parse_block(raw, 1, 6)   # rows index 1-5
-        bank_g,  bank_l    = parse_block(raw, 8, 14)  # rows index 8-13
-
-        return {
-            "fetch_time": fetch_time,
-            "nifty_gainers": nifty_g,
-            "nifty_losers":  nifty_l,
-            "bank_gainers":  bank_g,
-            "bank_losers":   bank_l,
-        }
-    except Exception as e:
-        print("TOP5 ERROR:", e)
-        return {"fetch_time":"—","nifty_gainers":[],"nifty_losers":[],"bank_gainers":[],"bank_losers":[]}
-
-# =========================
-# 📋 STOCKS  (pic 8) — B66:E117
-# =========================
-def get_stocks_data():
-    try:
-        fetch_time = safe(sheet.acell("E66").value)
-        raw = get_range("B67:E117")  # header + 50 stocks
-
-        stocks = []
-        for r in raw[1:]:
-            if not r or len(r) < 4 or not safe(r[0]): continue
-            stocks.append({
-                "name":   safe(r[0]),
-                "cmp":    fmt(r[1]),
-                "pct":    clean_num(r[2]),
-                "change": clean_num(r[3]),
-            })
-        return {"fetch_time": fetch_time, "stocks": stocks}
-    except Exception as e:
-        print("STOCKS ERROR:", e)
-        return {"fetch_time":"—","stocks":[]}
-
-# =========================
-# 🌊 ORDER FLOW  (pic 9) — G67:N81
-# =========================
-def get_orderflow_data():
-    try:
-        raw = get_range("G67:N81")
-
-        def fmt_vol(v):
-            v = clean_num(v)
-            if v >= 1_000_000_000:
-                return f"{v/1_000_000_000:.2f}B"
-            if v >= 1_000_000:
-                return f"{v/1_000_000:.1f}M"
-            if v >= 1_000:
-                return f"{v/1_000:.1f}K"
-            return str(int(v))
-
-        def parse_rows(rows):
-            out = []
-            for r in rows:
-                # skip invalid / header rows
-                if len(r) < 8:
-                    continue
-                if not r[1] or ":" not in str(r[1]):
-                    continue  # skip header rows
-
-                delta = clean_num(r[6])
-
-                out.append({
-                    "time":     safe(r[1]),
-                    "spot":     fmt(r[2]),
-                    "volume":   fmt_vol(r[3]),
-                    "buyers":   fmt_vol(r[4]),
-                    "sellers":  fmt_vol(r[5]),
-                    "delta":    delta,
-                    "delta_fmt": fmt_vol(delta),
-                    "bias":     "Bull" if delta > 0 else "Bear" if delta < 0 else "Neutral"
-                })
-            return out
-
-        # 🔥 SPLIT DATA CORRECTLY
-        nifty_block = raw[2:8]   # rows with actual nifty data
-        bank_block  = raw[10:16] # rows with banknifty data
-
-        return {
-            "nifty": parse_rows(nifty_block),
-            "bank":  parse_rows(bank_block),
-        }
-
-    except Exception as e:
-        print("ORDERFLOW ERROR:", e)
-        return {"nifty": [], "bank": []}
-
-
-# =========================
-# 📦 COMMODITIES (FIXED)
-# =========================
-@app.route("/commodities")
-def commodities():
-    if require_login():
-        return redirect("/home")
-
-    symbols = [
-        "MCX:GOLD26JUNFUT",
-        "MCX:SILVER26MAYFUT",
-        "MCX:CRUDEOIL26MAYFUT",
-        "MCX:NATGASMINI26MAYFUT"
-    ]
-
-    name_map = {
-        "GOLD": "GOLD",
-        "SILVER": "SILVER",
-        "CRUDEOIL": "CRUDE OIL",
-        "NATGAS": "NATURAL GAS"
-    }
-
-    try:
-        fyers = get_fyers()
-        data = fyers.quotes({"symbols": ",".join(symbols)})
-
-        out = []
-
-        if data.get("s") == "ok":
-            for item in data["d"]:
-                v = item["v"]
-                sym = item["n"].split(":")[1]
-
-                name = next((name_map[k] for k in name_map if k in sym), "UNKNOWN")
-
-                lp = v.get("lp", 0)
-                prev = v.get("prev_close_price", 0)
-
-                out.append({
-                    "name": name,
-                    "price": lp,
-                    "change": round(lp - prev, 2),
-                    "high": v.get("high_price", 0),
-                    "low": v.get("low_price", 0)
-                })
-
-        return render_template("commodities.html", data=out)
-
-    except Exception as e:
-        print("COMMODITIES ERROR:", e)
-        return "Error loading commodities"
-
-# =========================
-# 📥 DOWNLOAD (FIXED)
-# =========================
-@app.route("/download/<filename>")
-def download_file(filename):
-    return send_from_directory("static/downloads", filename, as_attachment=True)
-
-# =========================
-# 🔐 LOGIN
-# =========================
-@app.route("/unlock", methods=["POST"])
-def unlock():
-    if request.form.get("password") == "1234":
-        session["logged_in"] = True
-    return ("", 204)
-
-@app.route("/logout")
-def logout():
-    session.clear()
-    return redirect("/home")
-
-# =========================
-# 🌐 ROUTES (ALL RESTORED WITH DATA)
+# 🌐 ROUTES
 # =========================
 @app.route("/")
 @app.route("/home")
@@ -562,44 +174,35 @@ def home():
 
 @app.route("/intraday")
 def intraday():
-    if require_login(): return redirect("/home")
-    return render_template("intraday.html", data=get_intraday_data())
+    return render_template("intraday.html")
 
 @app.route("/chain")
-@app.route("/maxoi")
 def chain():
-    if require_login(): return redirect("/home")
-    return render_template("chain.html", data=get_chain_data())
+    return render_template("chain.html")
 
 @app.route("/indices")
 def indices():
-    if require_login(): return redirect("/home")
-    return render_template("indices.html", data=get_indices_data())
+    return render_template("indices.html")
 
 @app.route("/dma")
 def dma():
-    if require_login(): return redirect("/home")
-    return render_template("dma.html", data=get_dma_data())
+    return render_template("dma.html")
 
 @app.route("/oi")
 def oi():
-    if require_login(): return redirect("/home")
-    return render_template("oi.html", data=get_oi_data())
+    return render_template("oi.html")
 
 @app.route("/top5")
 def top5():
-    if require_login(): return redirect("/home")
-    return render_template("top5.html", data=get_top5_data())
+    return render_template("top5.html")
 
 @app.route("/stocks")
 def stocks():
-    if require_login(): return redirect("/home")
-    return render_template("stocks.html", data=get_stocks_data())
+    return render_template("stocks.html")
 
 @app.route("/orderflow")
 def orderflow():
-    if require_login(): return redirect("/home")
-    return render_template("orderflow.html", data=get_orderflow_data())
+    return render_template("orderflow.html")
 
 # =========================
 # ▶️ RUN
